@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+{% block page_title %}Analytics & Insights{% endblock %}
+{% block page_sub %}AI-powered recruitment analytics and candidate insights{% endblock %}
+
+{% block content %}
+
+{% if not has_data %}
+<div class="card">
+  <div class="empty">
+    <div class="empty-icon">📊</div>
+    <div class="empty-title">No data yet</div>
+    <div class="empty-sub">Screen some resumes first to see analytics</div>
+    <div style="margin-top:16px">
+      <a href="/screen" class="btn btn-primary">🔍 Start Screening</a>
+    </div>
+  </div>
+</div>
+
+{% else %}
+
+<!-- Stats -->
+<div class="stats-grid" style="margin-bottom:24px">
+  <div class="stat-card s1">
+    <div class="stat-icon">👥</div>
+    <div class="stat-num">{{ total }}</div>
+    <div class="stat-label">Total Screened</div>
+  </div>
+  <div class="stat-card s2">
+    <div class="stat-icon">📊</div>
+    <div class="stat-num">{{ avg_score }}%</div>
+    <div class="stat-label">Average Score</div>
+  </div>
+  <div class="stat-card s3">
+    <div class="stat-icon">🏆</div>
+    <div class="stat-num">{{ top_score }}%</div>
+    <div class="stat-label">Top Score</div>
+  </div>
+  <div class="stat-card s4">
+    <div class="stat-icon">⭐</div>
+    <div class="stat-num">{{ rec_counts.get('Highly Recommended', 0) }}</div>
+    <div class="stat-label">Highly Recommended</div>
+  </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:24px">
+
+  <!-- Score Distribution -->
+  <div class="card">
+    <div class="card-title">📊 Score Distribution</div>
+    <div id="scoreChart" style="height:200px; display:flex; align-items:flex-end; gap:6px; padding-top:10px">
+      {% set ranges = [('0-20',0), ('21-40',0), ('41-60',0), ('61-80',0), ('81-100',0)] %}
+      {% set ns = namespace(r0=0, r1=0, r2=0, r3=0, r4=0) %}
+      {% for c in candidates %}
+        {% if c.total_score <= 20 %}{% set ns.r0 = ns.r0 + 1 %}
+        {% elif c.total_score <= 40 %}{% set ns.r1 = ns.r1 + 1 %}
+        {% elif c.total_score <= 60 %}{% set ns.r2 = ns.r2 + 1 %}
+        {% elif c.total_score <= 80 %}{% set ns.r3 = ns.r3 + 1 %}
+        {% else %}{% set ns.r4 = ns.r4 + 1 %}{% endif %}
+      {% endfor %}
+      {% set counts = [ns.r0, ns.r1, ns.r2, ns.r3, ns.r4] %}
+      {% set labels = ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'] %}
+      {% set colors = ['var(--red)', 'var(--orange)', 'var(--blue)', 'var(--accent)', 'var(--green)'] %}
+      {% set max_count = [ns.r0, ns.r1, ns.r2, ns.r3, ns.r4] | max %}
+      {% for i in range(5) %}
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px">
+        <div style="font-size:11px; font-weight:700; color:var(--text2)">{{ counts[i] }}</div>
+        <div style="width:100%; background:{{ colors[i] }}; border-radius:6px 6px 0 0; height:{% if max_count > 0 %}{{ (counts[i] / max_count * 150) | int }}{% else %}0{% endif %}px; min-height:4px; transition:height 0.5s"></div>
+        <div style="font-size:10px; color:var(--text3); text-align:center">{{ labels[i] }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Recommendation Breakdown -->
+  <div class="card">
+    <div class="card-title">⭐ Recommendation Breakdown</div>
+    {% set rec_list = [
+      ('Highly Recommended', 'var(--green)', '⭐'),
+      ('Recommended', 'var(--blue)', '✓'),
+      ('Maybe', 'var(--orange)', '~'),
+      ('Not Recommended', 'var(--red)', '✕')
+    ] %}
+    {% for rec, color, icon in rec_list %}
+    {% set count = rec_counts.get(rec, 0) %}
+    {% set pct = ((count / total) * 100) | int if total > 0 else 0 %}
+    <div style="margin-bottom:14px">
+      <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px">
+        <span style="color:var(--text2)">{{ icon }} {{ rec }}</span>
+        <span style="font-weight:700; color:var(--text)">{{ count }} ({{ pct }}%)</span>
+      </div>
+      <div class="bar-track" style="height:8px">
+        <div class="bar-fill" style="width:{{ pct }}%; background:{{ color }}; height:8px"></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<div class="grid-2" style="margin-bottom:24px">
+
+  <!-- Pipeline Status -->
+  <div class="card">
+    <div class="card-title">🔄 Pipeline Status</div>
+    {% set status_list = [
+      ('Applied', 'var(--blue)'),
+      ('Screened', 'var(--orange)'),
+      ('Interview', 'var(--purple)'),
+      ('Selected', 'var(--green)'),
+      ('Rejected', 'var(--red)')
+    ] %}
+    {% for status, color in status_list %}
+    {% set count = status_counts.get(status, 0) %}
+    {% set pct = ((count / total) * 100) | int if total > 0 else 0 %}
+    <div style="margin-bottom:14px">
+      <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px">
+        <span style="color:var(--text2)">{{ status }}</span>
+        <span style="font-weight:700; color:var(--text)">{{ count }} ({{ pct }}%)</span>
+      </div>
+      <div class="bar-track" style="height:8px">
+        <div class="bar-fill" style="width:{{ pct }}%; background:{{ color }}; height:8px"></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Top Skills -->
+  <div class="card">
+    <div class="card-title">🎯 Most Common Skills</div>
+    {% if top_skills %}
+    {% set max_freq = top_skills[0][1] %}
+    {% for skill, freq in top_skills %}
+    <div style="margin-bottom:10px">
+      <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px">
+        <span style="color:var(--text2)">{{ skill }}</span>
+        <span style="font-weight:700; color:var(--text)">{{ freq }} candidates</span>
+      </div>
+      <div class="bar-track" style="height:6px">
+        <div class="bar-fill" style="width:{{ ((freq / max_freq) * 100) | int }}%; background:var(--accent); height:6px"></div>
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty">
+      <div class="empty-sub">No skill data available</div>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- Candidate Score Table -->
+<div class="card">
+  <div class="card-title">🏆 Full Candidate Rankings</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Name</th>
+          <th>Total Score</th>
+          <th>ATS Score</th>
+          <th>Skill Match</th>
+          <th>Semantic</th>
+          <th>Experience</th>
+          <th>Education</th>
+          <th>Recommendation</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in candidates %}
+        <tr>
+          <td style="font-weight:700; color:{% if loop.index == 1 %}#f59e0b{% elif loop.index == 2 %}#94a3b8{% elif loop.index == 3 %}#cd7f32{% else %}var(--text3){% endif %}">
+            {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}#{{ loop.index }}{% endif %}
+          </td>
+          <td style="font-weight:600; color:var(--text)">{{ c.name }}</td>
+          <td><span style="font-weight:800; color:var(--accent2)">{{ c.total_score }}%</span></td>
+          <td><span style="color:var(--blue)">{{ c.ats_score }}%</span></td>
+          <td><span style="color:var(--accent)">{{ c.skill_score }}%</span></td>
+          <td><span style="color:var(--purple)">{{ c.semantic_score }}%</span></td>
+          <td>{{ c.experience_years }} yr</td>
+          <td>{{ c.education_level }}</td>
+          <td>
+            {% if c.recommendation == 'Highly Recommended' %}
+              <span class="rec-badge rb-hr">⭐ HR</span>
+            {% elif c.recommendation == 'Recommended' %}
+              <span class="rec-badge rb-r">✓ Rec</span>
+            {% elif c.recommendation == 'Maybe' %}
+              <span class="rec-badge rb-m">~ Maybe</span>
+            {% else %}
+              <span class="rec-badge rb-nr">✕ No</span>
+            {% endif %}
+          </td>
+          <td><span class="status-badge sb-{{ c.status | lower }}">{{ c.status }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}

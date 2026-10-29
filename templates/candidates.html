@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Candidates{% endblock %}
+{% block page_title %}All Candidates{% endblock %}
+{% block page_sub %}View, filter and manage all screened candidates{% endblock %}
+
+{% block content %}
+
+<!-- Filters -->
+<div class="card" style="margin-bottom:20px">
+  <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+    <form method="get" action="/candidates" style="display:flex; gap:10px; flex:1; flex-wrap:wrap">
+      <input type="text" name="search" placeholder="🔍 Search by name..." value="{{ search }}" style="flex:1; min-width:200px">
+      <select name="status" style="width:auto">
+        <option value="">All Statuses</option>
+        {% for s in ['Applied','Screened','Interview','Selected','Rejected'] %}
+        <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-primary" type="submit">Filter</button>
+      <a href="/candidates" class="btn btn-ghost">Reset</a>
+    </form>
+    <a href="/export/excel" class="btn btn-success">📥 Export Excel</a>
+  </div>
+</div>
+
+<!-- Stats Row -->
+<div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap">
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 20px; flex:1; text-align:center">
+    <div style="font-size:22px; font-weight:800; color:var(--text)">{{ total }}</div>
+    <div style="font-size:11px; color:var(--text3)">Total</div>
+  </div>
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 20px; flex:1; text-align:center">
+    <div style="font-size:22px; font-weight:800; color:var(--blue)">{{ candidates | selectattr('status','equalto','Applied') | list | length }}</div>
+    <div style="font-size:11px; color:var(--text3)">Applied</div>
+  </div>
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 20px; flex:1; text-align:center">
+    <div style="font-size:22px; font-weight:800; color:var(--purple)">{{ candidates | selectattr('status','equalto','Interview') | list | length }}</div>
+    <div style="font-size:11px; color:var(--text3)">Interview</div>
+  </div>
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 20px; flex:1; text-align:center">
+    <div style="font-size:22px; font-weight:800; color:var(--green)">{{ candidates | selectattr('status','equalto','Selected') | list | length }}</div>
+    <div style="font-size:11px; color:var(--text3)">Selected</div>
+  </div>
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 20px; flex:1; text-align:center">
+    <div style="font-size:22px; font-weight:800; color:var(--red)">{{ candidates | selectattr('status','equalto','Rejected') | list | length }}</div>
+    <div style="font-size:11px; color:var(--text3)">Rejected</div>
+  </div>
+</div>
+
+<!-- Candidates Table -->
+<div class="card">
+  <div class="card-title">👥 Candidate Rankings</div>
+  {% if candidates %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Score</th>
+          <th>ATS</th>
+          <th>Skills</th>
+          <th>Semantic</th>
+          <th>Experience</th>
+          <th>Education</th>
+          <th>Recommendation</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in candidates %}
+        <tr>
+          <td style="font-weight:700; color:var(--text3)">#{{ loop.index }}</td>
+          <td>
+            <div style="font-weight:600; color:var(--text)">{{ c.name }}</div>
+            <div style="font-size:11px; color:var(--text3)">{{ c.experience_years }}yr exp</div>
+          </td>
+          <td style="font-size:12px">{{ c.email }}</td>
+          <td>
+            <span style="font-size:16px; font-weight:800; color:var(--accent2)">{{ c.total_score }}%</span>
+          </td>
+          <td>
+            <span style="font-size:13px; font-weight:600; color:var(--blue)">{{ c.ats_score }}%</span>
+          </td>
+          <td>
+            <span style="font-size:13px; font-weight:600; color:var(--accent)">{{ c.skill_score }}%</span>
+          </td>
+          <td>
+            <span style="font-size:13px; font-weight:600; color:var(--purple)">{{ c.semantic_score }}%</span>
+          </td>
+          <td style="font-size:12px">{{ c.experience_years }} yr</td>
+          <td style="font-size:12px">{{ c.education_level }}</td>
+          <td>
+            {% if c.recommendation == 'Highly Recommended' %}
+              <span class="rec-badge rb-hr">⭐ HR</span>
+            {% elif c.recommendation == 'Recommended' %}
+              <span class="rec-badge rb-r">✓ Rec</span>
+            {% elif c.recommendation == 'Maybe' %}
+              <span class="rec-badge rb-m">~ Maybe</span>
+            {% else %}
+              <span class="rec-badge rb-nr">✕ No</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="status-badge sb-{{ c.status | lower }}">{{ c.status }}</span>
+          </td>
+          <td>
+            <form action="/update-status" method="post" style="display:flex; gap:6px; align-items:center">
+              <input type="hidden" name="filename" value="{{ c.filename }}">
+              <select name="status" style="width:auto; font-size:11px; padding:4px 8px">
+                {% for s in ['Applied','Screened','Interview','Selected','Rejected'] %}
+                <option value="{{ s }}" {% if c.status == s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn btn-ghost btn-sm" type="submit">✓</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="empty-icon">👥</div>
+    <div class="empty-title">No candidates found</div>
+    <div class="empty-sub">
+      {% if search or status_filter %}
+      Try changing your filters
+      {% else %}
+      Go to Screen Resumes to add candidates
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Matched Skills Section -->
+{% if candidates %}
+<div class="card" style="margin-top:20px">
+  <div class="card-title">🎯 Top Candidates — Skill Details</div>
+  <div style="display:flex; flex-direction:column; gap:12px">
+    {% for c in candidates[:5] %}
+    <div style="padding:14px; background:var(--surface2); border-radius:10px; border:1px solid var(--border)">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+        <div style="font-weight:600; color:var(--text)">{{ c.name }}</div>
+        <span style="font-size:16px; font-weight:800; color:var(--accent2)">{{ c.total_score }}%</span>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px">
+        {% for s in c.matched_skills[:8] %}
+        <span class="tag tag-green">✓ {{ s }}</span>
+        {% endfor %}
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:4px">
+        {% for s in c.missing_skills[:5] %}
+        <span class="tag tag-red">✕ {{ s }}</span>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

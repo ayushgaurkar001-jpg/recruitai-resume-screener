@@ -1,745 +1,157 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RecruitAI — Smart Resume Screening</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #22263a;
-      --border: #2e3248;
-      --accent: #6c63ff;
-      --accent2: #a78bfa;
-      --green: #10b981;
-      --red: #ef4444;
-      --orange: #f59e0b;
-      --blue: #3b82f6;
-      --purple: #8b5cf6;
-      --text: #f1f5f9;
-      --text2: #94a3b8;
-      --text3: #64748b;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    .layout { display: flex; min-height: 100vh; }
-
-    .sidebar {
-      width: 240px;
-      background: var(--surface);
-      border-right: 1px solid var(--border);
-      padding: 28px 20px;
-      position: fixed;
-      top: 0; left: 0; bottom: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .logo {
-      font-family: 'Playfair Display', serif;
-      font-size: 20px;
-      color: var(--text);
-      margin-bottom: 32px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .logo span { color: var(--accent2); }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text2);
-      cursor: pointer;
-      transition: all 0.15s;
-      text-decoration: none;
-    }
-
-    .nav-item:hover, .nav-item.active {
-      background: var(--surface2);
-      color: var(--text);
-    }
-
-    .nav-item.active { color: var(--accent2); }
-    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
-
-    .sidebar-footer {
-      margin-top: auto;
-      font-size: 11px;
-      color: var(--text3);
-      padding-top: 20px;
-      border-top: 1px solid var(--border);
-    }
-
-    .main {
-      margin-left: 240px;
-      flex: 1;
-      padding: 32px 40px;
-      max-width: calc(100vw - 240px);
-    }
-
-    .page-header { margin-bottom: 32px; }
-    .page-header h2 { font-size: 24px; font-weight: 700; color: var(--text); }
-    .page-header p { font-size: 13px; color: var(--text2); margin-top: 4px; }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 28px;
-    }
-
-    .stat {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .stat::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-    }
-
-    .stat.s1::before { background: var(--accent); }
-    .stat.s2::before { background: var(--green); }
-    .stat.s3::before { background: var(--orange); }
-    .stat.s4::before { background: var(--purple); }
-
-    .stat-num { font-size: 32px; font-weight: 800; color: var(--text); line-height: 1; }
-    .stat-label { font-size: 11px; color: var(--text3); margin-top: 6px; font-weight: 500; letter-spacing: 0.3px; }
-
-    .pipeline {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px 24px;
-      margin-bottom: 28px;
-    }
-
-    .pipeline-title { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 16px; }
-
-    .pipeline-steps { display: flex; align-items: center; }
-
-    .pipe-step {
-      flex: 1;
-      text-align: center;
-      padding: 14px 10px;
-      position: relative;
-    }
-
-    .pipe-step:not(:last-child)::after {
-      content: '→';
-      position: absolute;
-      right: -6px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text3);
-      font-size: 14px;
-      z-index: 1;
-    }
-
-    .pipe-count { font-size: 26px; font-weight: 800; display: block; line-height: 1; }
-    .pipe-name { font-size: 11px; font-weight: 500; margin-top: 4px; display: block; color: var(--text3); }
-
-    .pipe-step.p-applied .pipe-count { color: var(--blue); }
-    .pipe-step.p-screened .pipe-count { color: var(--orange); }
-    .pipe-step.p-interview .pipe-count { color: var(--purple); }
-    .pipe-step.p-selected .pipe-count { color: var(--green); }
-    .pipe-step.p-rejected .pipe-count { color: var(--red); }
-
-    .two-col { display: grid; grid-template-columns: 1fr 1.6fr; gap: 24px; align-items: start; }
-
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-    }
-
-    .panel-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 18px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .field-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 8px; display: block; }
-
-    textarea {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
-      color: var(--text);
-      font-size: 13px;
-      font-family: 'Inter', sans-serif;
-      resize: vertical;
-      transition: border-color 0.15s;
-      line-height: 1.6;
-    }
-
-    textarea:focus { outline: none; border-color: var(--accent); }
-
-    .upload-zone {
-      border: 2px dashed var(--border);
-      border-radius: 8px;
-      padding: 20px;
-      text-align: center;
-      margin-top: 16px;
-      cursor: pointer;
-      transition: border-color 0.15s;
-    }
-
-    .upload-zone:hover { border-color: var(--accent); }
-    .upload-zone input { display: none; }
-    .upload-zone-text { font-size: 13px; color: var(--text2); margin-top: 8px; }
-    .upload-zone-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
-
-    .file-list { margin-top: 10px; }
-    .file-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
-      background: var(--surface2);
-      border-radius: 6px;
-      font-size: 12px;
-      color: var(--text2);
-      margin-top: 6px;
-    }
-
-    .btn-primary {
-      width: 100%;
-      background: var(--accent);
-      color: white;
-      border: none;
-      padding: 13px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 18px;
-      transition: opacity 0.15s;
-      font-family: 'Inter', sans-serif;
-    }
-
-    .btn-primary:hover { opacity: 0.9; }
-
-    .btn-clear {
-      width: 100%;
-      background: transparent;
-      color: var(--red);
-      border: 1px solid var(--red);
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      margin-top: 10px;
-      transition: all 0.15s;
-      font-family: 'Inter', sans-serif;
-    }
-
-    .btn-clear:hover { background: var(--red); color: white; }
-
-    /* NLP Tech Badges */
-    .tech-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-    }
-
-    .tech-badge {
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.3px;
-    }
-
-    .tb-purple { background: rgba(139,92,246,0.15); color: var(--purple); }
-    .tb-blue { background: rgba(59,130,246,0.15); color: var(--blue); }
-    .tb-green { background: rgba(16,185,129,0.15); color: var(--green); }
-    .tb-orange { background: rgba(245,158,11,0.15); color: var(--orange); }
-
-    .candidates-panel { display: flex; flex-direction: column; gap: 14px; }
-
-    .candidate-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      transition: border-color 0.15s;
-    }
-
-    .candidate-card:hover { border-color: var(--accent); }
-    .candidate-card.rank-1 { border-left: 4px solid #f59e0b; }
-    .candidate-card.rank-2 { border-left: 4px solid #94a3b8; }
-    .candidate-card.rank-3 { border-left: 4px solid #cd7f32; }
-
-    .card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 14px;
-    }
-
-    .candidate-rank { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
-    .candidate-name { font-size: 16px; font-weight: 700; color: var(--text); margin-top: 2px; }
-    .candidate-meta { font-size: 12px; color: var(--text3); margin-top: 3px; }
-    .score-circle { text-align: right; }
-    .score-num { font-size: 28px; font-weight: 800; color: var(--accent2); line-height: 1; }
-    .score-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
-
-    .bars { margin-bottom: 12px; }
-    .bar-row { margin-bottom: 8px; }
-    .bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); margin-bottom: 4px; }
-    .bar-track { background: var(--surface2); border-radius: 20px; height: 5px; }
-    .bar-fill { height: 5px; border-radius: 20px; transition: width 0.6s ease; }
-    .bar-fill.skill { background: var(--accent); }
-    .bar-fill.exp { background: var(--green); }
-    .bar-fill.edu { background: var(--orange); }
-    .bar-fill.sem { background: var(--accent2); }
-
-    .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
-    .tag { padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
-    .tag.match { background: rgba(16,185,129,0.15); color: var(--green); }
-    .tag.miss { background: rgba(239,68,68,0.12); color: var(--red); }
-    .tag.kw { background: rgba(107,99,255,0.15); color: var(--accent2); }
-
-    .ai-box {
-      background: var(--surface2);
-      border-radius: 8px;
-      padding: 12px 14px;
-      font-size: 12px;
-      color: var(--text2);
-      line-height: 1.6;
-      margin-bottom: 12px;
-      border-left: 3px solid var(--accent);
-    }
-
-    .ai-box strong { color: var(--text); }
-
-    .rec-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 600;
-    }
-
-    .rec-badge.hr { background: rgba(16,185,129,0.15); color: var(--green); }
-    .rec-badge.r { background: rgba(59,130,246,0.15); color: var(--blue); }
-    .rec-badge.m { background: rgba(245,158,11,0.15); color: var(--orange); }
-    .rec-badge.nr { background: rgba(239,68,68,0.12); color: var(--red); }
-
-    .status-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border);
-    }
-
-    .status-label { font-size: 11px; color: var(--text3); font-weight: 500; }
-
-    select {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-size: 12px;
-      padding: 5px 10px;
-      font-family: 'Inter', sans-serif;
-      cursor: pointer;
-    }
-
-    select:focus { outline: none; border-color: var(--accent); }
-
-    .btn-update {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text2);
-      font-size: 12px;
-      padding: 5px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-family: 'Inter', sans-serif;
-      transition: all 0.15s;
-    }
-
-    .btn-update:hover { border-color: var(--accent); color: var(--accent2); }
-
-    .s-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; }
-    .s-applied { background: var(--blue); }
-    .s-screened { background: var(--orange); }
-    .s-interview { background: var(--purple); }
-    .s-selected { background: var(--green); }
-    .s-rejected { background: var(--red); }
-
-    .loading-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(15,17,23,0.9);
-      z-index: 999;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .loading-overlay.show { display: flex; }
-
-    .spinner {
-      width: 44px; height: 44px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .loading-text { font-size: 15px; color: var(--text2); font-weight: 500; }
-    .loading-sub { font-size: 12px; color: var(--text3); }
-    .loading-steps { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
-    .loading-step { font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 8px; }
-    .loading-step::before { content: '→'; color: var(--accent2); }
-
-    .empty { text-align: center; padding: 60px 20px; color: var(--text3); }
-    .empty-icon { font-size: 40px; margin-bottom: 14px; }
-    .empty-title { font-size: 15px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
-    .empty-sub { font-size: 13px; }
-
-    .divider-label {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-    }
-
-    .ner-box {
-      background: var(--surface2);
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 11px;
-      color: var(--text3);
-      margin-bottom: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .ner-item { color: var(--text2); }
-    .ner-label { color: var(--text3); font-size: 10px; }
-  </style>
-</head>
-<body>
-
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="spinner"></div>
-  <div class="loading-text">🤖 AI Pipeline Running</div>
-  <div class="loading-steps">
-    <div class="loading-step">Extracting text from PDF</div>
-    <div class="loading-step">Running spaCy NER analysis</div>
-    <div class="loading-step">Computing semantic similarity</div>
-    <div class="loading-step">Analyzing with Gemini AI</div>
-    <div class="loading-step">Calculating composite score</div>
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_sub %}Welcome back — AI Recruitment Overview{% endblock %}
+
+{% block content %}
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card s1">
+    <div class="stat-icon">👥</div>
+    <div class="stat-num">{{ total }}</div>
+    <div class="stat-label">Total Candidates</div>
   </div>
-  <div class="loading-sub" style="margin-top:8px">Please wait 15–30 seconds per resume</div>
+  <div class="stat-card s2">
+    <div class="stat-icon">✅</div>
+    <div class="stat-num">{{ selected }}</div>
+    <div class="stat-label">Selected</div>
+  </div>
+  <div class="stat-card s3">
+    <div class="stat-icon">⭐</div>
+    <div class="stat-num">{{ recommended }}</div>
+    <div class="stat-label">Highly Recommended</div>
+  </div>
+  <div class="stat-card s4">
+    <div class="stat-icon">📊</div>
+    <div class="stat-num">{{ avg_score }}%</div>
+    <div class="stat-label">Average Score</div>
+  </div>
 </div>
 
-<div class="layout">
-
-  <aside class="sidebar">
-    <div class="logo">Recruit<span>AI</span></div>
-    <a class="nav-item active" href="#"><span class="nav-icon">🏠</span> Dashboard</a>
-    <a class="nav-item" href="#"><span class="nav-icon">📄</span> Candidates</a>
-    <a class="nav-item" href="#"><span class="nav-icon">💼</span> Job Postings</a>
-    <a class="nav-item" href="#"><span class="nav-icon">📊</span> Analytics</a>
-    <a class="nav-item" href="#"><span class="nav-icon">⚙️</span> Settings</a>
-    <div class="sidebar-footer">
-      Powered by Google Gemini AI<br>
-      spaCy · sentence-transformers · YAKE<br>
-      RecruitAI v2.0
-    </div>
-  </aside>
-
-  <main class="main">
-    <div class="page-header">
-      <h2>Resume Screening Dashboard</h2>
-      <p>NLP Pipeline: PDF Extraction → spaCy NER → YAKE Keywords → Semantic Embeddings → Gemini AI → Composite Ranking</p>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat s1">
-        <div class="stat-num">{{ results|length if results else 0 }}</div>
-        <div class="stat-label">Total Candidates</div>
-      </div>
-      <div class="stat s2">
-        <div class="stat-num">{% if results %}{{ results[0].total_score }}%{% else %}—{% endif %}</div>
-        <div class="stat-label">Top Score</div>
-      </div>
-      <div class="stat s3">
-        <div class="stat-num">{% if results %}{{ results | selectattr('recommendation', 'equalto', 'Highly Recommended') | list | length }}{% else %}—{% endif %}</div>
-        <div class="stat-label">Highly Recommended</div>
-      </div>
-      <div class="stat s4">
-        <div class="stat-num">{% if results %}{{ results | selectattr('status', 'equalto', 'Selected') | list | length }}{% else %}—{% endif %}</div>
-        <div class="stat-label">Selected</div>
-      </div>
-    </div>
-
-    <div class="pipeline">
-      <div class="pipeline-title">Recruitment Pipeline</div>
-      <div class="pipeline-steps">
-        <div class="pipe-step p-applied">
-          <span class="pipe-count">{% if results %}{{ results | selectattr('status', 'equalto', 'Applied') | list | length }}{% else %}0{% endif %}</span>
-          <span class="pipe-name">Applied</span>
-        </div>
-        <div class="pipe-step p-screened">
-          <span class="pipe-count">{% if results %}{{ results | selectattr('status', 'equalto', 'Screened') | list | length }}{% else %}0{% endif %}</span>
-          <span class="pipe-name">Screened</span>
-        </div>
-        <div class="pipe-step p-interview">
-          <span class="pipe-count">{% if results %}{{ results | selectattr('status', 'equalto', 'Interview') | list | length }}{% else %}0{% endif %}</span>
-          <span class="pipe-name">Interview</span>
-        </div>
-        <div class="pipe-step p-selected">
-          <span class="pipe-count">{% if results %}{{ results | selectattr('status', 'equalto', 'Selected') | list | length }}{% else %}0{% endif %}</span>
-          <span class="pipe-name">Selected</span>
-        </div>
-        <div class="pipe-step p-rejected">
-          <span class="pipe-count">{% if results %}{{ results | selectattr('status', 'equalto', 'Rejected') | list | length }}{% else %}0{% endif %}</span>
-          <span class="pipe-name">Rejected</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="two-col">
-
-      <div>
-        <div class="panel">
-          <div class="panel-title">📋 New Screening</div>
-
-          <form action="/analyze" method="post" enctype="multipart/form-data" onsubmit="startLoading()">
-            <label class="field-label">Job Description (any domain)</label>
-            <textarea name="job_description" rows="6" placeholder="Describe the role, required skills, experience, education... Works for IT, Medical, Finance, HR, Engineering and more." required>{{ job_description or '' }}</textarea>
-
-            <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
-              <div style="font-size:28px">📂</div>
-              <div class="upload-zone-text">Click to upload resumes</div>
-              <div class="upload-zone-sub">PDF files only · Multiple allowed</div>
-              <input type="file" id="fileInput" name="resumes" accept=".pdf" multiple required onchange="showFiles(this)">
-            </div>
-
-            <div class="file-list" id="fileList"></div>
-            <button class="btn-primary" type="submit">🤖 Analyze with AI Pipeline</button>
-          </form>
-
-          {% if results %}
-          <form action="/clear" method="post">
-            <button class="btn-clear" type="submit">🗑 Clear all candidates</button>
-          </form>
-          {% endif %}
-
-          <div class="tech-badges">
-            <span class="tech-badge tb-purple">spaCy NER</span>
-            <span class="tech-badge tb-blue">Sentence Transformers</span>
-            <span class="tech-badge tb-green">Gemini AI</span>
-            <span class="tech-badge tb-orange">YAKE Keywords</span>
-            <span class="tech-badge tb-purple">Cosine Similarity</span>
-            <span class="tech-badge tb-blue">NLP Pipeline</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="candidates-panel">
-        {% if results %}
-
-        <div class="divider-label">{{ results|length }} candidate{{ 's' if results|length != 1 }} ranked by AI</div>
-
-        {% if job_keywords %}
-        <div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:4px;">
-          <div class="divider-label" style="margin-bottom:8px">🔑 YAKE Keyword Extraction from JD</div>
-          <div class="tags">
-            {% for kw in job_keywords[:14] %}<span class="tag kw">{{ kw }}</span>{% endfor %}
-          </div>
-        </div>
-        {% endif %}
-
-        {% for r in results %}
-        <div class="candidate-card {% if loop.index == 1 %}rank-1{% elif loop.index == 2 %}rank-2{% elif loop.index == 3 %}rank-3{% endif %}">
-
-          <div class="card-top">
-            <div>
-              <div class="candidate-rank">#{{ loop.index }} · {% if loop.index == 1 %}Top Match{% elif loop.index == 2 %}Runner Up{% else %}Candidate{% endif %}</div>
-              <div class="candidate-name">{{ r.name }}</div>
-              <div class="candidate-meta">{{ r.experience_years }} yr exp · {{ r.education_level }}</div>
-            </div>
-            <div class="score-circle">
-              <div class="score-num">{{ r.total_score }}%</div>
-              <div class="score-sub">Composite Score</div>
-              <div style="margin-top:6px">
-                {% if r.recommendation == 'Highly Recommended' %}
-                  <span class="rec-badge hr">⭐ {{ r.recommendation }}</span>
-                {% elif r.recommendation == 'Recommended' %}
-                  <span class="rec-badge r">✓ {{ r.recommendation }}</span>
-                {% elif r.recommendation == 'Maybe' %}
-                  <span class="rec-badge m">~ {{ r.recommendation }}</span>
-                {% else %}
-                  <span class="rec-badge nr">✕ {{ r.recommendation }}</span>
-                {% endif %}
-              </div>
-            </div>
-          </div>
-
-          <!-- Score Bars -->
-          <div class="bars">
-            <div class="bar-row">
-              <div class="bar-label"><span>Skill Match (Gemini AI)</span><span>{{ r.skill_score }}%</span></div>
-              <div class="bar-track"><div class="bar-fill skill" style="width:{{ r.skill_score }}%"></div></div>
-            </div>
-            <div class="bar-row">
-              <div class="bar-label"><span>Semantic Similarity (Embeddings)</span><span>{{ r.semantic_score }}%</span></div>
-              <div class="bar-track"><div class="bar-fill sem" style="width:{{ r.semantic_score }}%"></div></div>
-            </div>
-            <div class="bar-row">
-              <div class="bar-label"><span>Experience</span><span>{{ r.experience_score }}%</span></div>
-              <div class="bar-track"><div class="bar-fill exp" style="width:{{ r.experience_score }}%"></div></div>
-            </div>
-            <div class="bar-row">
-              <div class="bar-label"><span>Education</span><span>{{ r.education_score }}%</span></div>
-              <div class="bar-track"><div class="bar-fill edu" style="width:{{ r.education_score }}%"></div></div>
-            </div>
-          </div>
-
-          <!-- spaCy NER Entities -->
-          {% if r.entities and r.entities.organizations %}
-          <div class="ner-box">
-            <span class="ner-label">🏢 spaCy NER →</span>
-            {% for org in r.entities.organizations[:3] %}
-            <span class="ner-item">{{ org }}</span>
-            {% endfor %}
-            {% if r.entities.locations %}
-            <span style="color:var(--border)">·</span>
-            {% for loc in r.entities.locations[:2] %}
-            <span class="ner-item">📍{{ loc }}</span>
-            {% endfor %}
-            {% endif %}
-          </div>
-          {% endif %}
-
-          <!-- Skills -->
-          {% if r.matched_skills %}
-          <div style="margin-bottom:6px">
-            <div class="divider-label" style="margin-bottom:5px">Matched Skills</div>
-            <div class="tags">
-              {% for s in r.matched_skills %}<span class="tag match">✓ {{ s }}</span>{% endfor %}
-            </div>
-          </div>
-          {% endif %}
-
-          {% if r.missing_skills %}
-          <div style="margin-bottom:10px">
-            <div class="divider-label" style="margin-bottom:5px">Missing Skills</div>
-            <div class="tags">
-              {% for s in r.missing_skills[:6] %}<span class="tag miss">✕ {{ s }}</span>{% endfor %}
-            </div>
-          </div>
-          {% endif %}
-
-          <!-- AI Feedback -->
-          <div class="ai-box">
-            <div><strong>💪 Strengths —</strong> {{ r.strengths }}</div>
-            <div style="margin-top:6px"><strong>⚠️ Gaps —</strong> {{ r.weaknesses }}</div>
-          </div>
-
-          <!-- Status Update -->
-          <form action="/update-status" method="post">
-            <input type="hidden" name="filename" value="{{ r.filename }}">
-            <div class="status-row">
-              <span class="s-dot s-{{ r.status | lower }}"></span>
-              <span class="status-label">{{ r.status }}</span>
-              <span style="flex:1"></span>
-              <select name="status">
-                {% for s in ['Applied','Screened','Interview','Selected','Rejected'] %}
-                <option value="{{ s }}" {% if r.status == s %}selected{% endif %}>{{ s }}</option>
-                {% endfor %}
-              </select>
-              <button class="btn-update" type="submit">Update</button>
-            </div>
-          </form>
-
-        </div>
-        {% endfor %}
-
-        {% else %}
-        <div class="panel">
-          <div class="empty">
-            <div class="empty-icon">🤖</div>
-            <div class="empty-title">No candidates yet</div>
-            <div class="empty-sub">Paste a job description and upload PDF resumes to start the AI pipeline</div>
-          </div>
-        </div>
-        {% endif %}
-      </div>
-
-    </div>
-  </main>
+<!-- Pipeline -->
+<div class="pipeline-bar">
+  <div class="pipe-step p-applied">
+    <span class="pipe-count">{{ candidates | selectattr('status','equalto','Applied') | list | length }}</span>
+    <span class="pipe-name">Applied</span>
+  </div>
+  <div class="pipe-step p-screened">
+    <span class="pipe-count">{{ candidates | selectattr('status','equalto','Screened') | list | length }}</span>
+    <span class="pipe-name">Screened</span>
+  </div>
+  <div class="pipe-step p-interview">
+    <span class="pipe-count">{{ candidates | selectattr('status','equalto','Interview') | list | length }}</span>
+    <span class="pipe-name">Interview</span>
+  </div>
+  <div class="pipe-step p-selected">
+    <span class="pipe-count">{{ candidates | selectattr('status','equalto','Selected') | list | length }}</span>
+    <span class="pipe-name">Selected</span>
+  </div>
+  <div class="pipe-step p-rejected">
+    <span class="pipe-count">{{ candidates | selectattr('status','equalto','Rejected') | list | length }}</span>
+    <span class="pipe-name">Rejected</span>
+  </div>
 </div>
 
-<script>
-  function startLoading() {
-    document.getElementById('loadingOverlay').classList.add('show');
-  }
+<div class="grid-2">
 
-  function showFiles(input) {
-    const list = document.getElementById('fileList');
-    list.innerHTML = '';
-    Array.from(input.files).forEach(f => {
-      const div = document.createElement('div');
-      div.className = 'file-item';
-      div.innerHTML = '📄 ' + f.name;
-      list.appendChild(div);
-    });
-  }
-</script>
+  <!-- Recent Candidates -->
+  <div class="card">
+    <div class="card-title">🕐 Recent Candidates</div>
+    {% if recent %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Score</th>
+            <th>Status</th>
+            <th>Recommendation</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in recent %}
+          <tr>
+            <td style="color:var(--text); font-weight:500">{{ c.name }}</td>
+            <td style="color:var(--accent2); font-weight:700">{{ c.total_score }}%</td>
+            <td>
+              <span class="status-badge sb-{{ c.status | lower }}">{{ c.status }}</span>
+            </td>
+            <td>
+              {% if c.recommendation == 'Highly Recommended' %}
+                <span class="rec-badge rb-hr">⭐ HR</span>
+              {% elif c.recommendation == 'Recommended' %}
+                <span class="rec-badge rb-r">✓ Rec</span>
+              {% elif c.recommendation == 'Maybe' %}
+                <span class="rec-badge rb-m">~ Maybe</span>
+              {% else %}
+                <span class="rec-badge rb-nr">✕ No</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">
+      <div class="empty-icon">👥</div>
+      <div class="empty-title">No candidates yet</div>
+      <div class="empty-sub">Go to Screen Resumes to start</div>
+    </div>
+    {% endif %}
+  </div>
 
-</body>
-</html>
+  <!-- Job Postings -->
+  <div class="card">
+    <div class="card-title">💼 Active Job Postings</div>
+    {% if jobs %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Company</th>
+            <th>Candidates</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for j in jobs %}
+          <tr>
+            <td style="color:var(--text); font-weight:500">{{ j.title }}</td>
+            <td>{{ j.company }}</td>
+            <td style="color:var(--accent2); font-weight:600">{{ j.candidates_count }}</td>
+            <td>{{ j.created_at }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">
+      <div class="empty-icon">💼</div>
+      <div class="empty-title">No jobs posted yet</div>
+      <div class="empty-sub">Go to Job Postings to create one</div>
+    </div>
+    {% endif %}
+    <div style="margin-top:14px">
+      <a href="/jobs" class="btn btn-ghost btn-sm">+ Add Job Posting</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- Quick Actions -->
+<div class="card" style="margin-top:20px">
+  <div class="card-title">⚡ Quick Actions</div>
+  <div style="display:flex; gap:12px; flex-wrap:wrap">
+    <a href="/screen" class="btn btn-primary">🔍 Screen Resumes</a>
+    <a href="/jobs" class="btn btn-ghost">💼 Post a Job</a>
+    <a href="/candidates" class="btn btn-ghost">👥 View All Candidates</a>
+    <a href="/analytics" class="btn btn-ghost">📊 View Analytics</a>
+    <a href="/export/excel" class="btn btn-success">📥 Export to Excel</a>
+  </div>
+</div>
+
+{% endblock %}

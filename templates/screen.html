@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}Screen Resumes{% endblock %}
+{% block page_title %}AI Resume Screening{% endblock %}
+{% block page_sub %}Upload resumes and let AI rank candidates automatically{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns:1fr 1.8fr; gap:24px; align-items:start">
+
+  <!-- LEFT: Form -->
+  <div>
+    <div class="card">
+      <div class="card-title">📋 New Screening</div>
+
+      <form action="/analyze" method="post" enctype="multipart/form-data" onsubmit="startLoading()">
+
+        {% if jobs %}
+        <div class="form-group">
+          <label class="form-label">Link to Job Posting (optional)</label>
+          <select name="job_id">
+            <option value="">— Select a job —</option>
+            {% for j in jobs %}
+            <option value="{{ j.id }}">{{ j.title }} @ {{ j.company }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% else %}
+        <input type="hidden" name="job_id" value="">
+        {% endif %}
+
+        <div class="form-group">
+          <label class="form-label">Job Description (any domain)</label>
+          <textarea name="job_description" rows="7"
+            placeholder="Paste the full job description here...
+Works for any domain: IT, Medical, Finance, HR, Engineering, Marketing..."
+            required>{{ job_description or '' }}</textarea>
+        </div>
+
+        <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+          <div style="font-size:32px">📂</div>
+          <div style="font-size:13px; color:var(--text2); margin-top:8px">Click to upload resumes</div>
+          <div style="font-size:11px; color:var(--text3); margin-top:4px">PDF only · Multiple files allowed</div>
+          <input type="file" id="fileInput" name="resumes" accept=".pdf" multiple required onchange="showFiles(this)">
+        </div>
+
+        <div id="fileList"></div>
+
+        <button class="btn btn-primary btn-full" type="submit" style="margin-top:16px">
+          🤖 Analyze with AI Pipeline
+        </button>
+      </form>
+
+      <div class="tech-badges">
+        <span class="tb tb-purple">spaCy NER</span>
+        <span class="tb tb-blue">Sentence Transformers</span>
+        <span class="tb tb-green">Gemini AI</span>
+        <span class="tb tb-orange">YAKE Keywords</span>
+        <span class="tb tb-purple">Cosine Similarity</span>
+        <span class="tb tb-blue">ATS Scoring</span>
+      </div>
+    </div>
+
+    {% if results %}
+    <div class="card" style="margin-top:16px">
+      <form action="/clear" method="post">
+        <button class="btn btn-danger btn-full" type="submit">🗑 Clear All Results</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- RIGHT: Results -->
+  <div>
+    {% if results %}
+
+    <!-- YAKE Keywords -->
+    {% if job_keywords %}
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">🔑 YAKE Keyword Extraction</div>
+      <div style="display:flex; flex-wrap:wrap; gap:5px">
+        {% for kw in job_keywords[:14] %}
+        <span class="tag tag-purple">{{ kw }}</span>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div style="font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px">
+      {{ results|length }} Candidate{{ 's' if results|length != 1 }} Ranked by AI
+    </div>
+
+    {% for r in results %}
+    <div class="card" style="margin-bottom:14px; border-left:4px solid {% if loop.index == 1 %}#f59e0b{% elif loop.index == 2 %}#94a3b8{% elif loop.index == 3 %}#cd7f32{% else %}var(--border){% endif %}">
+
+      <!-- Top Row -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px">
+        <div>
+          <div style="font-size:10px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px">
+            #{{ loop.index }} · {% if loop.index == 1 %}🥇 Top Match{% elif loop.index == 2 %}🥈 Runner Up{% elif loop.index == 3 %}🥉 3rd Place{% else %}Candidate{% endif %}
+          </div>
+          <div style="font-size:16px; font-weight:700; color:var(--text); margin-top:3px">{{ r.name }}</div>
+          <div style="font-size:11px; color:var(--text3); margin-top:2px">
+            📧 {{ r.email }} · 💼 {{ r.experience_years }}yr · 🎓 {{ r.education_level }}
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="score-big">{{ r.total_score }}%</div>
+          <div class="score-sub">Composite Score</div>
+          <div style="margin-top:6px">
+            {% if r.recommendation == 'Highly Recommended' %}
+              <span class="rec-badge rb-hr">⭐ {{ r.recommendation }}</span>
+            {% elif r.recommendation == 'Recommended' %}
+              <span class="rec-badge rb-r">✓ {{ r.recommendation }}</span>
+            {% elif r.recommendation == 'Maybe' %}
+              <span class="rec-badge rb-m">~ {{ r.recommendation }}</span>
+            {% else %}
+              <span class="rec-badge rb-nr">✕ {{ r.recommendation }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Score Bars -->
+      <div style="margin-bottom:12px">
+        <div class="bar-row">
+          <div class="bar-label"><span>Skill Match (Gemini AI)</span><span>{{ r.skill_score }}%</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:{{ r.skill_score }}%; background:var(--accent)"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span>Semantic Similarity (Embeddings)</span><span>{{ r.semantic_score }}%</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:{{ r.semantic_score }}%; background:var(--accent2)"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span>ATS Score</span><span>{{ r.ats_score }}%</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:{{ r.ats_score }}%; background:var(--blue)"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span>Experience</span><span>{{ r.experience_score }}%</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:{{ r.experience_score }}%; background:var(--green)"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span>Education</span><span>{{ r.education_score }}%</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:{{ r.education_score }}%; background:var(--orange)"></div></div>
+        </div>
+      </div>
+
+      <!-- spaCy NER -->
+      {% if r.entities and r.entities.organizations %}
+      <div style="background:var(--surface2); border-radius:6px; padding:8px 12px; font-size:11px; color:var(--text3); margin-bottom:10px; display:flex; flex-wrap:wrap; gap:6px; align-items:center">
+        <span>🏢 spaCy NER →</span>
+        {% for org in r.entities.organizations[:3] %}<span style="color:var(--text2)">{{ org }}</span>{% endfor %}
+        {% for loc in r.entities.locations[:2] %}<span style="color:var(--text2)">📍{{ loc }}</span>{% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Skills -->
+      <div style="margin-bottom:8px">
+        <div style="font-size:10px; font-weight:600; color:var(--text3); text-transform:uppercase; margin-bottom:5px">Matched Skills</div>
+        <div style="display:flex; flex-wrap:wrap; gap:4px">
+          {% for s in r.matched_skills %}<span class="tag tag-green">✓ {{ s }}</span>{% endfor %}
+          {% if not r.matched_skills %}<span style="font-size:11px; color:var(--text3)">None detected</span>{% endif %}
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <div style="font-size:10px; font-weight:600; color:var(--text3); text-transform:uppercase; margin-bottom:5px">Missing Skills</div>
+        <div style="display:flex; flex-wrap:wrap; gap:4px">
+          {% for s in r.missing_skills[:6] %}<span class="tag tag-red">✕ {{ s }}</span>{% endfor %}
+          {% if not r.missing_skills %}<span style="font-size:11px; color:var(--text3)">None</span>{% endif %}
+        </div>
+      </div>
+
+      <!-- AI Feedback -->
+      <div class="ai-box" style="margin-bottom:12px">
+        <div><strong>💪 Strengths —</strong> {{ r.strengths }}</div>
+        <div style="margin-top:6px"><strong>⚠️ Gaps —</strong> {{ r.weaknesses }}</div>
+        {% if r.summary %}
+        <div style="margin-top:6px"><strong>📝 Summary —</strong> {{ r.summary }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Status Update -->
+      <form action="/update-status" method="post">
+        <input type="hidden" name="filename" value="{{ r.filename }}">
+        <div style="display:flex; align-items:center; gap:10px; padding-top:12px; border-top:1px solid var(--border)">
+          <span class="status-badge sb-{{ r.status | lower }}">● {{ r.status }}</span>
+          <span style="flex:1"></span>
+          <select name="status" style="width:auto">
+            {% for s in ['Applied','Screened','Interview','Selected','Rejected'] %}
+            <option value="{{ s }}" {% if r.status == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+          <button class="btn btn-ghost btn-sm" type="submit">Update</button>
+        </div>
+      </form>
+
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div class="card">
+      <div class="empty">
+        <div class="empty-icon">🤖</div>
+        <div class="empty-title">Ready to screen candidates</div>
+        <div class="empty-sub">Paste a job description and upload PDF resumes to start the AI pipeline</div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}   

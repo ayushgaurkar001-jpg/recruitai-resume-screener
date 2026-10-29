@@ -1,0 +1,260 @@
+ 
+{% extends "base.html" %}
+
+{% block title %}Recruitment Report{% endblock %}
+{% block page_title %}Recruitment Report{% endblock %}
+{% block page_sub %}Complete AI-based candidate screening and ranking report{% endblock %}
+
+{% block content %}
+
+<!-- Report Header -->
+<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px">
+
+        <div>
+            <h2 style="font-size:21px;margin-bottom:8px">
+                AI Recruitment Summary
+            </h2>
+
+            <p style="color:var(--muted);font-size:13px">
+                Candidate screening and evaluation report
+            </p>
+
+            <p style="color:var(--muted);font-size:12px;margin-top:8px">
+                Generated: {{ report_date }}
+            </p>
+        </div>
+
+        <button onclick="window.print()" class="btn btn-primary">
+            🖨️ Print Report
+        </button>
+
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="stats-grid">
+
+    <div class="stat-card s1">
+        <div class="stat-icon">👥</div>
+        <div class="stat-num">{{ total }}</div>
+        <div class="stat-label">Total Candidates</div>
+    </div>
+
+    <div class="stat-card s2">
+        <div class="stat-icon">✅</div>
+        <div class="stat-num">{{ selected }}</div>
+        <div class="stat-label">Selected Candidates</div>
+    </div>
+
+    <div class="stat-card s3">
+        <div class="stat-icon">❌</div>
+        <div class="stat-num">{{ rejected }}</div>
+        <div class="stat-label">Rejected Candidates</div>
+    </div>
+
+    <div class="stat-card s4">
+        <div class="stat-icon">📊</div>
+        <div class="stat-num">{{ avg_score }}%</div>
+        <div class="stat-label">Average Score</div>
+    </div>
+
+</div>
+
+<!-- Status Summary -->
+<div class="card" style="margin-top:20px">
+
+    <div class="card-title">📌 Recruitment Status Summary</div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Number of Candidates</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for status, count in status_counts.items() %}
+                <tr>
+                    <td>
+                        <span class="status-badge sb-{{ status | lower }}">
+                            {{ status }}
+                        </span>
+                    </td>
+                    <td>{{ count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- Candidate Rankings -->
+<div class="card">
+
+    <div class="card-title">🏆 Complete Candidate Ranking</div>
+
+    {% if candidates %}
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Candidate Name</th>
+                    <th>Total Score</th>
+                    <th>ATS Score</th>
+                    <th>Skill Score</th>
+                    <th>Experience Score</th>
+                    <th>Education Score</th>
+                    <th>Recommendation</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for c in candidates %}
+                <tr>
+                    <td>#{{ loop.index }}</td>
+                    <td>{{ c.name }}</td>
+                    <td><strong>{{ c.total_score }}%</strong></td>
+                    <td>{{ c.ats_score }}%</td>
+                    <td>{{ c.skill_score }}%</td>
+                    <td>{{ c.experience_score }}%</td>
+                    <td>{{ c.education_score }}%</td>
+
+                    <td>
+                        {% if c.recommendation == 'Highly Recommended' %}
+                            <span class="rec-badge rb-hr">Highly Recommended</span>
+                        {% elif c.recommendation == 'Recommended' %}
+                            <span class="rec-badge rb-r">Recommended</span>
+                        {% elif c.recommendation == 'Maybe' %}
+                            <span class="rec-badge rb-m">Maybe</span>
+                        {% else %}
+                            <span class="rec-badge rb-nr">Not Recommended</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <span class="status-badge sb-{{ c.status | lower }}">
+                            {{ c.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+
+    <div class="empty">
+        <div class="empty-icon">📑</div>
+        <div class="empty-title">No Candidates Available</div>
+        <div class="empty-sub">
+            Analyze resumes to generate the recruitment report.
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+
+<!-- Detailed Candidate Analysis -->
+{% if candidates %}
+
+<div class="card">
+    <div class="card-title">💡 Candidate Skills Analysis</div>
+
+    {% for c in candidates %}
+
+    <div style="padding:16px 0;border-bottom:1px solid var(--border)">
+
+        <h3 style="font-size:15px;margin-bottom:12px">
+            {{ c.name }}
+        </h3>
+
+        <p style="font-size:13px;color:var(--muted);margin-bottom:10px">
+            Experience: {{ c.experience_years }} years |
+            Education: {{ c.education_level }}
+        </p>
+
+        <p style="font-size:13px;margin-bottom:8px">
+            <strong>Matched Skills:</strong>
+            {{ c.matched_skills | join(', ') if c.matched_skills else 'None' }}
+        </p>
+
+        <p style="font-size:13px;margin-bottom:8px">
+            <strong>Missing Skills:</strong>
+            {{ c.missing_skills | join(', ') if c.missing_skills else 'None' }}
+        </p>
+
+        <p style="font-size:13px;margin-bottom:8px">
+            <strong>Strengths:</strong> {{ c.strengths }}
+        </p>
+
+        <p style="font-size:13px">
+            <strong>Weaknesses:</strong> {{ c.weaknesses }}
+        </p>
+
+    </div>
+
+    {% endfor %}
+</div>
+
+{% endif %}
+
+<div class="card">
+    <div class="card-title">📥 Download Report</div>
+
+    <a href="/export/excel" class="btn btn-success">
+        Download Excel Report
+    </a>
+
+    <button onclick="window.print()" class="btn btn-primary">
+        Print / Save as PDF
+    </button>
+</div>
+
+<style>
+@media print {
+    body {
+        background: white !important;
+        color: black !important;
+    }
+
+    .sidebar, .topbar, button, .btn {
+        display: none !important;
+    }
+
+    .main {
+        margin: 0 !important;
+        width: 100% !important;
+        padding: 0 !important;
+    }
+
+    .card, .stat-card {
+        background: white !important;
+        color: black !important;
+        border: 1px solid #ccc !important;
+        break-inside: avoid;
+    }
+
+    table {
+        color: black !important;
+    }
+
+    td, th {
+        color: black !important;
+    }
+
+    .stat-label, p {
+        color: #444 !important;
+    }
+}
+</style>
+
+{% endblock %}

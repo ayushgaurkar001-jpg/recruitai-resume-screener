@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Job Postings{% endblock %}
+{% block page_title %}Job Postings{% endblock %}
+{% block page_sub %}Create and manage job postings for AI screening{% endblock %}
+
+{% block content %}
+
+{% if success %}
+<div class="alert alert-success">✅ {{ success }}</div>
+{% endif %}
+
+<div class="grid-2">
+
+  <!-- Create Job Form -->
+  <div class="card">
+    <div class="card-title">➕ Create New Job Posting</div>
+
+    <form action="/jobs/create" method="post">
+      <div class="form-group">
+        <label class="form-label">Job Title *</label>
+        <input type="text" name="title" placeholder="e.g. Python Developer, Data Scientist, HR Manager" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Company Name *</label>
+        <input type="text" name="company" placeholder="e.g. TCS, Infosys, Startup XYZ" required>
+      </div>
+
+      <div class="grid-2" style="gap:12px">
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <input type="text" name="location" placeholder="e.g. Pune, Remote">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Job Type</label>
+          <select name="job_type">
+            <option>Full-time</option>
+            <option>Part-time</option>
+            <option>Internship</option>
+            <option>Contract</option>
+            <option>Remote</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Job Description *</label>
+        <textarea name="description" rows="8"
+          placeholder="Paste the full job description here. Include required skills, experience, education, responsibilities...
+The AI will use this to screen and rank candidates automatically."
+          required></textarea>
+      </div>
+
+      <button class="btn btn-primary btn-full" type="submit">💼 Create Job Posting</button>
+    </form>
+  </div>
+
+  <!-- Jobs List -->
+  <div>
+    {% if jobs %}
+    <div style="font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px">
+      {{ jobs|length }} Job Posting{{ 's' if jobs|length != 1 }}
+    </div>
+
+    {% for j in jobs %}
+    <div class="card" style="margin-bottom:14px; border-left:4px solid var(--accent)">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px">
+        <div>
+          <div style="font-size:15px; font-weight:700; color:var(--text)">{{ j.title }}</div>
+          <div style="font-size:12px; color:var(--text3); margin-top:3px">
+            🏢 {{ j.company }}
+            {% if j.location %} · 📍 {{ j.location }}{% endif %}
+            · 💼 {{ j.job_type }}
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:20px; font-weight:800; color:var(--accent2)">{{ j.candidates_count }}</div>
+          <div style="font-size:10px; color:var(--text3)">Candidates</div>
+        </div>
+      </div>
+
+      <div style="font-size:12px; color:var(--text2); line-height:1.5; margin-bottom:12px">
+        {{ j.description[:200] }}{% if j.description|length > 200 %}...{% endif %}
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid var(--border)">
+        <span style="font-size:11px; color:var(--text3)">📅 {{ j.created_at }}</span>
+        <div style="display:flex; gap:8px">
+          <a href="/screen" class="btn btn-ghost btn-sm">🔍 Screen</a>
+          <form action="/jobs/delete" method="post" style="display:inline">
+            <input type="hidden" name="job_id" value="{{ j.id }}">
+            <button class="btn btn-danger btn-sm" type="submit">🗑 Delete</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div class="card">
+      <div class="empty">
+        <div class="empty-icon">💼</div>
+        <div class="empty-title">No job postings yet</div>
+        <div class="empty-sub">Create your first job posting to start screening candidates</div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
