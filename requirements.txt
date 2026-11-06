@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pdfplumber
+python-multipart
+spacy
+sentence-transformers
+yake
+openpyxl
+google-genai
+jinja2
