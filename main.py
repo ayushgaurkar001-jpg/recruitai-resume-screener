@@ -19,7 +19,7 @@ import os
 # =============================================
 # CONFIGURATION — API KEY HIDDEN IN .env FILE
 # =============================================
-client = google_genai.Client(api_key="AQ.Ab8RN6KflmKWUK18l2FUvo87pQYiJmNuAcpHRFEyJxaijxk6zA")
+client = google_genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 # =============================================
 # LOAD NLP MODELS
 # =============================================
