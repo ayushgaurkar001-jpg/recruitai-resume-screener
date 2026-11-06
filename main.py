@@ -11,18 +11,15 @@ from sentence_transformers import SentenceTransformer, util
 import yake
 from google import genai as google_genai
 import os
-from dotenv import load_dotenv
+
 
 # Load environment variables from .env file
-load_dotenv()
+
 
 # =============================================
 # CONFIGURATION — API KEY HIDDEN IN .env FILE
 # =============================================
 client = google_genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
-
-
-
 # =============================================
 # LOAD NLP MODELS
 # =============================================
