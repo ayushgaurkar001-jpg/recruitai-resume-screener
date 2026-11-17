@@ -11,16 +11,17 @@ from sentence_transformers import SentenceTransformer, util
 import yake
 from google import genai as google_genai
 import os
+from dotenv import load_dotenv  # ← ADD THIS
 
-
-# Load environment variables from .env file
-
+load_dotenv()  # ← ADD THIS (before anything else uses os.environ)
 
 # =============================================
 # CONFIGURATION — API KEY HIDDEN IN .env FILE
 # =============================================
-client = google_genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
-# =============================================
+api_key = os.environ.get("GEMINI_API_KEY")
+if not api_key:
+    raise RuntimeError("GEMINI_API_KEY not set in .env file")
+client = google_genai.Client(api_key=api_key)# =============================================
 # LOAD NLP MODELS
 # =============================================
 print("Loading NLP models...")
@@ -101,7 +102,7 @@ Return exactly this JSON:
 """
     try:
         response = client.models.generate_content(
-        model="gemini-3.5-flash-lite",
+        model="gemini-2.0-flash-lite",
         contents=prompt,
         config={
         "response_mime_type": "application/json"
