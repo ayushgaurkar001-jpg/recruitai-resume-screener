@@ -110,8 +110,11 @@ Works for any domain: IT, Medical, Finance, HR, Engineering, Marketing..."
             #{{ loop.index }} · {% if loop.index == 1 %}🥇 Top Match{% elif loop.index == 2 %}🥈 Runner Up{% elif loop.index == 3 %}🥉 3rd Place{% else %}Candidate{% endif %}
           </div>
           <div style="font-size:16px; font-weight:700; color:var(--text); margin-top:3px">{{ r.name }}</div>
-          <div style="font-size:11px; color:var(--text3); margin-top:2px">
+                    <div style="font-size:11px; color:var(--text3); margin-top:2px">
             📧 {{ r.email }} · 💼 {{ r.experience_years }}yr · 🎓 {{ r.education_level }}
+          </div>
+          <div style="font-size:10px; color:var(--accent2); margin-top:2px">
+            🤖 {{ r.get('model_used', 'AI Pipeline') }}
           </div>
         </div>
         <div style="text-align:right">
