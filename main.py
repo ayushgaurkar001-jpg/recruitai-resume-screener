@@ -585,7 +585,7 @@ async def candidates_page(request: Request, status: str = "", search: str = ""):
     })
 
 @app.get("/compare", response_class=HTMLResponse)
-async def compare_page(request: Request, request_obj: Request = None):
+async def compare_page(request: Request):
     # Get all selected candidate IDs from query params
     params = dict(request.query_params)
     selected_ids = []
