@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RecruitAI — AI Resume Screening Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#050510;--surface:#0C0C1E;--surface2:#12122A;--border:#1E1E3F;
+      --p1:#7B2FFF;--p2:#FF2F7B;--p3:#2FFFB4;--p4:#FFD700;--p5:#FF6B2F;--p6:#2F9FFF;
+      --text:#F0EEFF;--text-muted:#5B5880;--text-soft:#9896BE;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
+
+    /* BG */
+    .orb{position:fixed;border-radius:50%;filter:blur(80px);opacity:0.07;animation:drift 20s infinite ease-in-out;pointer-events:none;z-index:0;}
+    .orb1{width:600px;height:600px;background:var(--p1);top:-200px;left:-100px;}
+    .orb2{width:500px;height:500px;background:var(--p2);top:30%;right:-150px;animation-delay:-7s;}
+    .orb3{width:400px;height:400px;background:var(--p3);bottom:-100px;left:30%;animation-delay:-14s;}
+    @keyframes drift{0%,100%{transform:translate(0,0);}50%{transform:translate(30px,-20px);}}
+    .grid-bg{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;
+      background-image:linear-gradient(rgba(123,47,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(123,47,255,0.025) 1px,transparent 1px);
+      background-size:60px 60px;}
+
+    /* NAV */
+    nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+      padding:14px 60px;background:rgba(5,5,16,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+    .logo{display:flex;align-items:center;gap:10px;}
+    .logo-ic{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--p1),var(--p2));
+      display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:white;
+      box-shadow:0 0 15px rgba(123,47,255,0.4);}
+    .logo-txt{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;}
+    .logo-txt span{background:linear-gradient(135deg,var(--p1),var(--p2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .nav-right{display:flex;align-items:center;gap:10px;}
+    .pill{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;
+      background:rgba(47,255,180,0.07);border:1px solid rgba(47,255,180,0.2);font-size:11px;font-weight:600;color:var(--p3);}
+    .pulse{width:6px;height:6px;border-radius:50%;background:var(--p3);animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(47,255,180,0.4);}50%{opacity:0.6;box-shadow:0 0 0 4px rgba(47,255,180,0);}}
+    .btn-nav{padding:9px 20px;border-radius:9px;border:none;cursor:pointer;font-size:13px;font-weight:700;
+      font-family:'Inter',sans-serif;background:linear-gradient(135deg,var(--p1),var(--p2));
+      color:white;box-shadow:0 0 20px rgba(123,47,255,0.3);transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+    .btn-nav:hover{transform:translateY(-1px);box-shadow:0 0 30px rgba(123,47,255,0.5);}
+
+    /* WRAPPER */
+    .wrap{position:relative;z-index:1;}
+
+    /* HERO */
+    .hero{padding:90px 60px 70px;text-align:center;}
+    .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:20px;margin-bottom:24px;
+      background:linear-gradient(135deg,rgba(123,47,255,0.1),rgba(255,47,123,0.1));border:1px solid rgba(123,47,255,0.3);
+      font-size:12px;font-weight:600;color:var(--p3);}
+    .hero h1{font-family:'Syne',sans-serif;font-size:68px;font-weight:800;line-height:1.0;letter-spacing:-3px;margin-bottom:22px;}
+    .g1{background:linear-gradient(135deg,var(--p1),var(--p2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .g2{background:linear-gradient(135deg,var(--p3),var(--p6));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .g3{background:linear-gradient(135deg,var(--p4),var(--p5));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .hero p{font-size:17px;color:var(--text-soft);max-width:580px;margin:0 auto 36px;line-height:1.75;}
+
+    /* KEY PILLS */
+    .key-cloud{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:40px;}
+    .kp{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid;animation:kfloat 3s ease-in-out infinite;}
+    @keyframes kfloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+    .k1{background:rgba(123,47,255,0.1);border-color:rgba(123,47,255,0.4);color:#A67FFF;animation-delay:0s;}
+    .k2{background:rgba(255,47,123,0.1);border-color:rgba(255,47,123,0.4);color:#FF7FAF;animation-delay:0.3s;}
+    .k3{background:rgba(47,255,180,0.1);border-color:rgba(47,255,180,0.4);color:#7FFFCF;animation-delay:0.6s;}
+    .k4{background:rgba(255,215,0,0.1);border-color:rgba(255,215,0,0.4);color:#FFD700;animation-delay:0.9s;}
+    .k5{background:rgba(255,107,47,0.1);border-color:rgba(255,107,47,0.4);color:#FF9B7F;animation-delay:1.2s;}
+    .k6{background:rgba(47,159,255,0.1);border-color:rgba(47,159,255,0.4);color:#7FCFFF;animation-delay:1.5s;}
+    .k7{background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.4);color:#C4B0FF;animation-delay:1.8s;}
+    .k8{background:rgba(47,255,180,0.1);border-color:rgba(47,255,180,0.4);color:#7FFFCF;animation-delay:2.1s;}
+
+    /* HERO BUTTONS */
+    .hero-btns{display:flex;gap:14px;justify-content:center;margin-bottom:16px;}
+    .btn-hero{padding:14px 30px;border-radius:10px;border:none;cursor:pointer;font-size:14px;font-weight:700;
+      font-family:'Inter',sans-serif;background:linear-gradient(135deg,var(--p1),var(--p2));color:white;
+      box-shadow:0 0 30px rgba(123,47,255,0.4);transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;}
+    .btn-hero:hover{transform:translateY(-2px);box-shadow:0 0 50px rgba(123,47,255,0.6);}
+    .btn-hero2{padding:14px 30px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;
+      font-family:'Inter',sans-serif;background:transparent;color:var(--text);
+      border:1px solid var(--border);transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;}
+    .btn-hero2:hover{border-color:var(--p3);color:var(--p3);}
+
+    /* STATS BAR */
+    .stats-bar{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--border);
+      border-radius:14px;margin:0 60px 50px;overflow:hidden;background:var(--surface);}
+    .sb{padding:22px 20px;text-align:center;border-right:1px solid var(--border);transition:background 0.2s;}
+    .sb:last-child{border-right:none;}
+    .sb:hover{background:var(--surface2);}
+    .sb-n{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1;margin-bottom:5px;}
+    .sb-l{font-size:11px;color:var(--text-muted);}
+
+    /* TICKER */
+    .ticker-wrap{overflow:hidden;white-space:nowrap;padding:16px 0;border-top:1px solid var(--border);
+      border-bottom:1px solid var(--border);margin-bottom:0;background:var(--surface);}
+    .ticker{display:inline-flex;gap:12px;animation:tick 25s linear infinite;}
+    .ticker:hover{animation-play-state:paused;}
+    @keyframes tick{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+    .ti{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:7px;font-size:11px;font-weight:600;border:1px solid;flex-shrink:0;}
+
+    /* FEATURES H-SCROLL */
+    .section{padding:60px 60px;position:relative;z-index:1;}
+    .sec-ey{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;display:block;}
+    .sec-t{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin-bottom:12px;}
+    .sec-s{font-size:15px;color:var(--text-soft);line-height:1.75;max-width:520px;margin-bottom:32px;}
+    .sh{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;}
+    .aw{display:flex;gap:8px;}
+    .ab{width:34px;height:34px;border-radius:8px;background:var(--surface);border:1px solid var(--border);
+      color:var(--text-soft);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+    .ab:hover{border-color:var(--p1);color:var(--p1);}
+    .hs{display:flex;gap:16px;overflow-x:auto;padding-bottom:12px;scroll-snap-type:x mandatory;
+      scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+    .hs::-webkit-scrollbar{height:3px;}
+    .hs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+    .fc{flex:0 0 260px;border-radius:14px;padding:22px;scroll-snap-align:start;cursor:pointer;
+      border:1px solid var(--border);background:var(--surface);transition:all 0.25s;position:relative;overflow:hidden;}
+    .fc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity 0.25s;}
+    .fc:hover{transform:translateY(-4px);}
+    .fc:hover::before{opacity:1;}
+    .f1::before{background:linear-gradient(90deg,var(--p1),var(--p2));}
+    .f1:hover{border-color:rgba(123,47,255,0.5);box-shadow:0 8px 25px rgba(123,47,255,0.1);}
+    .f2::before{background:linear-gradient(90deg,var(--p3),var(--p6));}
+    .f2:hover{border-color:rgba(47,255,180,0.5);box-shadow:0 8px 25px rgba(47,255,180,0.1);}
+    .f3::before{background:linear-gradient(90deg,var(--p4),var(--p5));}
+    .f3:hover{border-color:rgba(255,215,0,0.5);box-shadow:0 8px 25px rgba(255,215,0,0.1);}
+    .f4::before{background:linear-gradient(90deg,var(--p2),var(--p5));}
+    .f4:hover{border-color:rgba(255,47,123,0.5);box-shadow:0 8px 25px rgba(255,47,123,0.1);}
+    .f5::before{background:linear-gradient(90deg,var(--p6),var(--p1));}
+    .f5:hover{border-color:rgba(47,159,255,0.5);box-shadow:0 8px 25px rgba(47,159,255,0.1);}
+    .f6::before{background:linear-gradient(90deg,var(--p5),var(--p4));}
+    .f6:hover{border-color:rgba(255,107,47,0.5);box-shadow:0 8px 25px rgba(255,107,47,0.1);}
+    .fic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px;}
+    .ft{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:7px;}
+    .fd{font-size:12px;color:var(--text-soft);line-height:1.6;margin-bottom:12px;}
+    .fchip{display:inline-flex;padding:3px 8px;border-radius:5px;font-size:10px;font-weight:700;}
+
+    /* HOW IT WORKS */
+    .how{display:grid;grid-template-columns:repeat(4,1fr);position:relative;margin-top:50px;}
+    .how::before{content:'';position:absolute;top:28px;left:12.5%;right:12.5%;height:1px;
+      background:linear-gradient(90deg,var(--p1),var(--p2),var(--p3),var(--p4));opacity:0.3;}
+    .hs2{text-align:center;padding:0 16px;}
+    .hn{width:56px;height:56px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;
+      font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin:0 auto 18px;position:relative;z-index:1;}
+    .h1{border-color:var(--p1);color:var(--p1);background:rgba(123,47,255,0.1);box-shadow:0 0 20px rgba(123,47,255,0.3);}
+    .h2{border-color:var(--p2);color:var(--p2);background:rgba(255,47,123,0.1);box-shadow:0 0 20px rgba(255,47,123,0.3);}
+    .h3{border-color:var(--p3);color:var(--p3);background:rgba(47,255,180,0.1);box-shadow:0 0 20px rgba(47,255,180,0.3);}
+    .h4{border-color:var(--p4);color:var(--p4);background:rgba(255,215,0,0.1);box-shadow:0 0 20px rgba(255,215,0,0.3);}
+    .ht{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:8px;}
+    .hd{font-size:12px;color:var(--text-soft);line-height:1.6;}
+
+    /* CTA */
+    .cta{margin:0 60px 60px;border-radius:20px;padding:70px 60px;text-align:center;
+      background:linear-gradient(135deg,rgba(123,47,255,0.08),rgba(255,47,123,0.08));
+      border:1px solid rgba(123,47,255,0.25);position:relative;z-index:1;}
+    .cta-t{font-family:'Syne',sans-serif;font-size:40px;font-weight:800;letter-spacing:-1.5px;margin-bottom:12px;}
+    .cta-s{font-size:15px;color:var(--text-soft);margin-bottom:28px;}
+    .cta-btns{display:flex;gap:12px;justify-content:center;margin-bottom:16px;}
+    .gh-link{font-size:13px;color:var(--text-muted);text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
+    .gh-link:hover{color:var(--p3);}
+
+    /* FOOTER */
+    footer{position:relative;z-index:1;padding:24px 60px;border-top:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;background:var(--surface);}
+    .footer-logo{display:flex;align-items:center;gap:8px;}
+    footer a{font-size:12px;color:var(--text-muted);text-decoration:none;margin-left:20px;}
+    footer a:hover{color:var(--p3);}
+    .footer-copy{font-size:12px;color:var(--text-muted);}
+  </style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+<div class="grid-bg"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="logo-ic">R</div>
+    <div class="logo-txt">Recruit<span>AI</span></div>
+  </div>
+  <div class="nav-right">
+    <div class="pill"><div class="pulse"></div>Groq AI Live</div>
+    <a href="/dashboard" class="btn-nav">🚀 Start Screening</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">🚀 &nbsp;Next-Gen AI Resume Screening Platform</div>
+    <h1>
+      <span class="g1">Screen</span> Smarter.<br>
+      <span class="g2">Rank</span> Faster.<br>
+      <span class="g3">Hire</span> Better.
+    </h1>
+    <p>RecruitAI uses Groq AI, semantic embeddings, spaCy NER and YAKE keyword extraction to automatically screen, score and rank candidates — in seconds.</p>
+
+    <!-- FLOATING KEY PILLS -->
+    <div class="key-cloud">
+      <span class="kp k1">🤖 Groq AI</span>
+      <span class="kp k2">🧠 Semantic NLP</span>
+      <span class="kp k3">🔍 spaCy NER</span>
+      <span class="kp k4">🏷️ YAKE Keywords</span>
+      <span class="kp k5">🔥 Firebase</span>
+      <span class="kp k6">⚡ FastAPI</span>
+      <span class="kp k7">📊 ATS Scoring</span>
+      <span class="kp k8">⚠️ Bias Detection</span>
+    </div>
+
+    <div class="hero-btns">
+      <a href="/dashboard" class="btn-hero">🎯 Start Screening Free</a>
+      <a href="#features" class="btn-hero2">Explore Features ↓</a>
+    </div>
+  </section>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="sb"><div class="sb-n" style="color:var(--p1)">5+</div><div class="sb-l">AI Models in Pipeline</div></div>
+    <div class="sb"><div class="sb-n" style="color:var(--p2)">80%</div><div class="sb-l">Screening Time Saved</div></div>
+    <div class="sb"><div class="sb-n" style="color:var(--p3)">6</div><div class="sb-l">Score Dimensions</div></div>
+    <div class="sb"><div class="sb-n" style="color:var(--p4)">∞</div><div class="sb-l">Resumes Supported</div></div>
+    <div class="sb"><div class="sb-n" style="color:var(--p5)">100%</div><div class="sb-l">Free to Use</div></div>
+  </div>
+
+  <!-- TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <span class="ti" style="background:rgba(123,47,255,0.08);border-color:rgba(123,47,255,0.3);color:#A67FFF">🤖 Groq AI Analysis</span>
+      <span class="ti" style="background:rgba(47,255,180,0.08);border-color:rgba(47,255,180,0.3);color:#7FFFCF">🧠 Semantic Similarity</span>
+      <span class="ti" style="background:rgba(255,215,0,0.08);border-color:rgba(255,215,0,0.3);color:#FFD700">🏷️ YAKE Extraction</span>
+      <span class="ti" style="background:rgba(255,47,123,0.08);border-color:rgba(255,47,123,0.3);color:#FF7FAF">⚠️ Bias Detection</span>
+      <span class="ti" style="background:rgba(47,159,255,0.08);border-color:rgba(47,159,255,0.3);color:#7FCFFF">📊 ATS Scoring</span>
+      <span class="ti" style="background:rgba(255,107,47,0.08);border-color:rgba(255,107,47,0.3);color:#FF9B7F">🔥 Firebase Realtime</span>
+      <span class="ti" style="background:rgba(167,139,250,0.08);border-color:rgba(167,139,250,0.3);color:#C4B0FF">🔍 spaCy NER</span>
+      <span class="ti" style="background:rgba(123,47,255,0.08);border-color:rgba(123,47,255,0.3);color:#A67FFF">📥 Excel Export</span>
+      <span class="ti" style="background:rgba(47,255,180,0.08);border-color:rgba(47,255,180,0.3);color:#7FFFCF">⚖️ Compare Candidates</span>
+      <span class="ti" style="background:rgba(255,215,0,0.08);border-color:rgba(255,215,0,0.3);color:#FFD700">📚 Training Suggestions</span>
+      <!-- duplicate for seamless loop -->
+      <span class="ti" style="background:rgba(123,47,255,0.08);border-color:rgba(123,47,255,0.3);color:#A67FFF">🤖 Groq AI Analysis</span>
+      <span class="ti" style="background:rgba(47,255,180,0.08);border-color:rgba(47,255,180,0.3);color:#7FFFCF">🧠 Semantic Similarity</span>
+      <span class="ti" style="background:rgba(255,215,0,0.08);border-color:rgba(255,215,0,0.3);color:#FFD700">🏷️ YAKE Extraction</span>
+      <span class="ti" style="background:rgba(255,47,123,0.08);border-color:rgba(255,47,123,0.3);color:#FF7FAF">⚠️ Bias Detection</span>
+      <span class="ti" style="background:rgba(47,159,255,0.08);border-color:rgba(47,159,255,0.3);color:#7FCFFF">📊 ATS Scoring</span>
+      <span class="ti" style="background:rgba(255,107,47,0.08);border-color:rgba(255,107,47,0.3);color:#FF9B7F">🔥 Firebase Realtime</span>
+      <span class="ti" style="background:rgba(167,139,250,0.08);border-color:rgba(167,139,250,0.3);color:#C4B0FF">🔍 spaCy NER</span>
+      <span class="ti" style="background:rgba(123,47,255,0.08);border-color:rgba(123,47,255,0.3);color:#A67FFF">📥 Excel Export</span>
+      <span class="ti" style="background:rgba(47,255,180,0.08);border-color:rgba(47,255,180,0.3);color:#7FFFCF">⚖️ Compare Candidates</span>
+      <span class="ti" style="background:rgba(255,215,0,0.08);border-color:rgba(255,215,0,0.3);color:#FFD700">📚 Training Suggestions</span>
+    </div>
+  </div>
+
+  <!-- FEATURES H-SCROLL -->
+  <section class="section" id="features">
+    <div class="sh">
+      <div>
+        <span class="sec-ey" style="color:var(--p1)">Core Features</span>
+        <div class="sec-t">Everything you need to<br><span class="g1">hire the best talent</span></div>
+        <div class="sec-s">From upload to ranked list — RecruitAI handles the full pipeline automatically.</div>
+      </div>
+      <div class="aw">
+        <button class="ab" onclick="document.getElementById('hs1').scrollBy({left:-275,behavior:'smooth'})">←</button>
+        <button class="ab" onclick="document.getElementById('hs1').scrollBy({left:275,behavior:'smooth'})">→</button>
+      </div>
+    </div>
+    <div class="hs" id="hs1">
+      <div class="fc f1"><div class="fic" style="background:rgba(123,47,255,0.12)">🤖</div><div class="ft">Groq AI Analysis</div><div class="fd">5-model fallback pipeline. llama3-8b → llama3-70b → mixtral → gemma2 → basic scoring. Never fails.</div><span class="fchip" style="background:rgba(123,47,255,0.1);color:#A67FFF;border:1px solid rgba(123,47,255,0.3)">Groq · llama3</span></div>
+      <div class="fc f2"><div class="fic" style="background:rgba(47,255,180,0.12)">🧠</div><div class="ft">Semantic Similarity</div><div class="fd">sentence-transformers with all-MiniLM-L6-v2 computes deep contextual matching between resume and JD.</div><span class="fchip" style="background:rgba(47,255,180,0.1);color:#7FFFCF;border:1px solid rgba(47,255,180,0.3)">Embeddings · Cosine</span></div>
+      <div class="fc f3"><div class="fic" style="background:rgba(255,215,0,0.12)">🏷️</div><div class="ft">YAKE Keywords</div><div class="fd">Unsupervised extraction pulls top 20 skills and terms from any job description automatically.</div><span class="fchip" style="background:rgba(255,215,0,0.1);color:#FFD700;border:1px solid rgba(255,215,0,0.3)">YAKE · NLP</span></div>
+      <div class="fc f4"><div class="fic" style="background:rgba(255,47,123,0.12)">🔍</div><div class="ft">spaCy NER</div><div class="fd">Named Entity Recognition extracts name, email, phone, organizations and locations from resume text.</div><span class="fchip" style="background:rgba(255,47,123,0.1);color:#FF7FAF;border:1px solid rgba(255,47,123,0.3)">spaCy · NER</span></div>
+      <div class="fc f5"><div class="fic" style="background:rgba(47,159,255,0.12)">⚠️</div><div class="ft">Bias Detection</div><div class="fd">Scans JDs for gender, age, appearance, religion and caste bias across 5 categories before posting.</div><span class="fchip" style="background:rgba(47,159,255,0.1);color:#7FCFFF;border:1px solid rgba(47,159,255,0.3)">5 Categories</span></div>
+      <div class="fc f6"><div class="fic" style="background:rgba(255,107,47,0.12)">📊</div><div class="ft">Weighted Scoring</div><div class="fd">6-dimension score: Skill 35% + Semantic 25% + Experience 20% + Education 10% + ATS 10%.</div><span class="fchip" style="background:rgba(255,107,47,0.1);color:#FF9B7F;border:1px solid rgba(255,107,47,0.3)">6 Dimensions</span></div>
+      <div class="fc f1"><div class="fic" style="background:rgba(167,139,250,0.12)">🔥</div><div class="ft">Firebase Persistence</div><div class="fd">All candidates and jobs stored in Firestore for real-time persistence across sessions.</div><span class="fchip" style="background:rgba(167,139,250,0.1);color:#C4B0FF;border:1px solid rgba(167,139,250,0.3)">Firestore</span></div>
+      <div class="fc f2"><div class="fic" style="background:rgba(123,47,255,0.12)">⚖️</div><div class="ft">Candidate Compare</div><div class="fd">Head-to-head comparison of any two candidates across all 6 score dimensions and AI recommendations.</div><span class="fchip" style="background:rgba(123,47,255,0.1);color:#A67FFF;border:1px solid rgba(123,47,255,0.3)">Side-by-side</span></div>
+      <div class="fc f3"><div class="fic" style="background:rgba(47,255,180,0.12)">📚</div><div class="ft">Training Suggestions</div><div class="fd">Suggests Coursera and Udemy courses for every missing skill to help candidates upskill.</div><span class="fchip" style="background:rgba(47,255,180,0.1);color:#7FFFCF;border:1px solid rgba(47,255,180,0.3)">20+ Courses</span></div>
+      <div class="fc f4"><div class="fic" style="background:rgba(255,215,0,0.12)">📥</div><div class="ft">Excel Export</div><div class="fd">Export full ranked candidate list to styled Excel with all scores, skills and AI summaries.</div><span class="fchip" style="background:rgba(255,215,0,0.1);color:#FFD700;border:1px solid rgba(255,215,0,0.3)">openpyxl · .xlsx</span></div>
+      <div class="fc f5"><div class="fic" style="background:rgba(255,47,123,0.12)">💼</div><div class="ft">Job Postings</div><div class="fd">Create and manage job postings, link candidates to roles and track hiring pipeline per job.</div><span class="fchip" style="background:rgba(255,47,123,0.1);color:#FF7FAF;border:1px solid rgba(255,47,123,0.3)">Full CRUD</span></div>
+      <div class="fc f6"><div class="fic" style="background:rgba(47,159,255,0.12)">📈</div><div class="ft">Analytics Dashboard</div><div class="fd">Top skills, score distributions, recommendation breakdowns and status tracking across all candidates.</div><span class="fchip" style="background:rgba(47,159,255,0.1);color:#7FCFFF;border:1px solid rgba(47,159,255,0.3)">Charts · Insights</span></div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+    <div style="text-align:center;margin-bottom:10px">
+      <span class="sec-ey" style="color:var(--p2);display:block;text-align:center">How It Works</span>
+      <div class="sec-t" style="text-align:center">From resume to ranked<br><span class="g1">in 4 steps</span></div>
+    </div>
+    <div class="how">
+      <div class="hs2"><div class="hn h1">1</div><div class="ht">Upload Resumes</div><div class="hd">Upload PDF or DOCX resumes and paste the job description for the role you're hiring.</div></div>
+      <div class="hs2"><div class="hn h2">2</div><div class="ht">AI Processing</div><div class="hd">Groq AI + spaCy + YAKE + sentence-transformers simultaneously analyze each resume.</div></div>
+      <div class="hs2"><div class="hn h3">3</div><div class="ht">Score & Rank</div><div class="hd">Each candidate gets a weighted score across 6 dimensions and is ranked automatically.</div></div>
+      <div class="hs2"><div class="hn h4">4</div><div class="ht">Hire or Export</div><div class="hd">Update status, compare finalists side by side, and export the full ranked list to Excel.</div></div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta">
+    <div class="cta-t">Ready to hire <span class="g1">smarter?</span></div>
+    <div class="cta-s">Launch the app now — no login required, completely free.</div>
+    <div class="cta-btns">
+      <a href="/dashboard" class="btn-hero">🚀 Launch RecruitAI</a>
+    </div>
+    <a href="https://github.com/ayushgaurkar001-jpg/recruitai-resume-screener" target="_blank" class="gh-link">📂 View GitHub →</a>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">
+      <div class="logo-ic" style="width:26px;height:26px;font-size:12px">R</div>
+      <div class="logo-txt" style="font-size:14px">Recruit<span>AI</span></div>
+    </div>
+    <div class="footer-copy">FastAPI · Groq AI · spaCy · Firebase · Render · 2026</div>
+    <div>
+      <a href="https://github.com/ayushgaurkar001-jpg/recruitai-resume-screener" target="_blank">GitHub</a>
+      <a href="/dashboard">Live App</a>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

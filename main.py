@@ -408,7 +408,13 @@ def basic_scoring(resume_text, job_description):
 # =============================================
 # ROUTES — DASHBOARD
 # =============================================
+# NEW — landing page
 @app.get("/", response_class=HTMLResponse)
+async def landing(request: Request):
+    return templates.TemplateResponse(request, "landing.html", {})
+
+# RENAMED — dashboard now at /dashboard
+@app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
     total = len(candidates_store)
     selected = len([c for c in candidates_store if c["status"] == "Selected"])
