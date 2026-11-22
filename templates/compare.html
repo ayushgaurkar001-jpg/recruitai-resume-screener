@@ -1,200 +1,200 @@
 {% extends "base.html" %}
 {% block title %}Compare Candidates{% endblock %}
 {% block page_title %}Candidate Comparison{% endblock %}
-{% block page_sub %}Compare two candidates side by side{% endblock %}
+{% block page_sub %}Compare 2 to 10 candidates side by side{% endblock %}
 
 {% block content %}
 
-<!-- Select Candidates -->
-<div class="card" style="margin-bottom:24px">
-  <div class="card-title">🔀 Select Two Candidates to Compare</div>
-  <form method="get" action="/compare" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap">
-    <div style="flex:1; min-width:200px">
-      <label class="form-label">Candidate 1</label>
-      <select name="id1">
-        <option value="">— Select —</option>
-        {% for c in candidates %}
-        <option value="{{ c.id }}" {% if c1 and c.id == c1.id %}selected{% endif %}>
-          {{ c.name }} ({{ c.total_score }}%)
-        </option>
-        {% endfor %}
-      </select>
+<!-- Select Candidates Form -->
+<div class="card" style="margin-bottom:22px">
+  <div class="card-title">
+    <span class="aline" style="background:linear-gradient(var(--p1),var(--p2))"></span>
+    ⚖️ Select Candidates to Compare (2–10)
+  </div>
+
+  <form method="get" action="/compare" id="compareForm">
+    <div id="selectorGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px; margin-bottom:14px">
+      {% for i in range(1, 11) %}
+      <div>
+        <label class="form-label">Candidate {{ i }}{% if i <= 2 %} *{% endif %}</label>
+        <select name="id{{ i }}" onchange="updateSelectors()">
+          <option value="">— Select —</option>
+          {% for c in candidates %}
+          <option value="{{ c.id }}"
+            {% if selected_ids and loop.index0 < selected_ids|length and c.id == selected_ids[i-1] %}selected{% endif %}>
+            {{ c.name }} ({{ c.total_score }}%)
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endfor %}
     </div>
-    <div style="flex:1; min-width:200px">
-      <label class="form-label">Candidate 2</label>
-      <select name="id2">
-        <option value="">— Select —</option>
-        {% for c in candidates %}
-        <option value="{{ c.id }}" {% if c2 and c.id == c2.id %}selected{% endif %}>
-          {{ c.name }} ({{ c.total_score }}%)
-        </option>
-        {% endfor %}
-      </select>
+
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+      <button class="btn btn-primary" type="submit">⚡ Compare Now</button>
+      <a href="/compare" class="btn btn-ghost">Reset</a>
+      <span style="font-size:11px; color:var(--text3)">Select at least 2 candidates</span>
     </div>
-    <button class="btn btn-primary" type="submit">⚡ Compare Now</button>
   </form>
 </div>
 
-{% if c1 and c2 %}
+{% if selected and selected|length >= 2 %}
 
 <!-- Winner Banner -->
-{% if c1.total_score > c2.total_score %}
-<div style="background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(16,185,129,0.05)); border:1px solid rgba(16,185,129,0.3); border-radius:16px; padding:16px 24px; margin-bottom:24px; display:flex; align-items:center; gap:12px">
-  <div style="font-size:32px">🏆</div>
+{% set winner = selected | sort(attribute='total_score', reverse=True) | first %}
+<div style="background:linear-gradient(135deg,rgba(47,255,180,0.08),rgba(47,159,255,0.05)); border:1px solid rgba(47,255,180,0.2); border-radius:14px; padding:16px 24px; margin-bottom:22px; display:flex; align-items:center; gap:14px">
+  <div style="font-size:36px">🏆</div>
   <div>
-    <div style="font-size:16px; font-weight:700; color:var(--green)">{{ c1.name }} is the Better Match!</div>
-    <div style="font-size:12px; color:var(--text2); margin-top:2px">Scores {{ c1.total_score }}% vs {{ c2.total_score }}% — {{ (c1.total_score - c2.total_score) | round(1) }}% higher composite score</div>
+    <div style="font-size:16px; font-weight:700; color:var(--p3); font-family:'Syne',sans-serif">{{ winner.name }} is the Best Match!</div>
+    <div style="font-size:12px; color:var(--text2); margin-top:3px">
+      Scored <strong style="color:var(--p3)">{{ winner.total_score }}%</strong> composite score
+      · {{ winner.experience_years }}yr exp · {{ winner.education_level }}
+      · <span class="rec-badge rb-{{ 'hr' if winner.recommendation == 'Highly Recommended' else 'r' if winner.recommendation == 'Recommended' else 'm' if winner.recommendation == 'Maybe' else 'nr' }}">{{ winner.recommendation }}</span>
+    </div>
   </div>
 </div>
-{% elif c2.total_score > c1.total_score %}
-<div style="background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(16,185,129,0.05)); border:1px solid rgba(16,185,129,0.3); border-radius:16px; padding:16px 24px; margin-bottom:24px; display:flex; align-items:center; gap:12px">
-  <div style="font-size:32px">🏆</div>
-  <div>
-    <div style="font-size:16px; font-weight:700; color:var(--green)">{{ c2.name }} is the Better Match!</div>
-    <div style="font-size:12px; color:var(--text2); margin-top:2px">Scores {{ c2.total_score }}% vs {{ c1.total_score }}% — {{ (c2.total_score - c1.total_score) | round(1) }}% higher composite score</div>
-  </div>
-</div>
-{% else %}
-<div style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px 24px; margin-bottom:24px">
-  <div style="font-size:15px; font-weight:700; color:var(--text)">🤝 It's a Tie! Both candidates scored equally.</div>
-</div>
-{% endif %}
 
-<!-- Side by Side Comparison -->
-<div style="display:grid; grid-template-columns:1fr 80px 1fr; gap:0; margin-bottom:24px">
+<!-- Comparison Cards Grid -->
+<div style="display:grid; grid-template-columns:repeat({{ [selected|length, 4]|min }}, 1fr); gap:14px; margin-bottom:22px">
+  {% for c in selected | sort(attribute='total_score', reverse=True) %}
+  <div class="card" style="border-left:3px solid {% if loop.index == 1 %}var(--p4){% elif loop.index == 2 %}#94a3b8{% elif loop.index == 3 %}#cd7f32{% else %}var(--border){% endif %}; position:relative">
 
-  <!-- Candidate 1 -->
-  <div class="card" style="border-radius:16px 0 0 16px; border-right:none">
-    <div style="text-align:center; padding-bottom:16px; border-bottom:1px solid var(--border); margin-bottom:16px">
-      <div style="width:60px; height:60px; background:linear-gradient(135deg,var(--accent),var(--purple)); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:white; margin:0 auto 10px">{{ c1.name[0] }}</div>
-      <div style="font-size:17px; font-weight:700; color:var(--text)">{{ c1.name }}</div>
-      <div style="font-size:11px; color:var(--text3); margin-top:3px">{{ c1.experience_years }}yr exp · {{ c1.education_level }}</div>
-      <div style="font-size:28px; font-weight:900; color:var(--accent2); margin-top:8px">{{ c1.total_score }}%</div>
-      <div style="margin-top:6px">
-        {% if c1.recommendation == 'Highly Recommended' %}<span class="rec-badge rb-hr">⭐ {{ c1.recommendation }}</span>
-        {% elif c1.recommendation == 'Recommended' %}<span class="rec-badge rb-r">✓ {{ c1.recommendation }}</span>
-        {% elif c1.recommendation == 'Maybe' %}<span class="rec-badge rb-m">~ {{ c1.recommendation }}</span>
-        {% else %}<span class="rec-badge rb-nr">✕ {{ c1.recommendation }}</span>{% endif %}
+    <!-- Rank Badge -->
+    <div style="position:absolute; top:12px; right:12px; width:24px; height:24px; background:{% if loop.index == 1 %}rgba(255,215,0,0.15){% elif loop.index == 2 %}rgba(148,163,184,0.15){% elif loop.index == 3 %}rgba(205,127,50,0.15){% else %}var(--surface2){% endif %}; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:{% if loop.index == 1 %}var(--p4){% elif loop.index == 2 %}#94a3b8{% elif loop.index == 3 %}#cd7f32{% else %}var(--text3){% endif %}">
+      {{ loop.index }}
+    </div>
+
+    <!-- Avatar + Name -->
+    <div style="text-align:center; padding-bottom:14px; border-bottom:1px solid var(--border); margin-bottom:14px">
+      <div style="width:48px; height:48px; background:linear-gradient(135deg,var(--p1),var(--p2)); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; color:white; margin:0 auto 10px; font-family:'Syne',sans-serif">
+        {{ c.name[0] }}
+      </div>
+      <div style="font-size:14px; font-weight:700; color:var(--text); font-family:'Syne',sans-serif">{{ c.name }}</div>
+      <div style="font-size:11px; color:var(--text3); margin-top:3px">{{ c.experience_years }}yr · {{ c.education_level }}</div>
+      <div class="score-big" style="font-size:24px; margin-top:8px">{{ c.total_score }}%</div>
+      <div style="margin-top:5px">
+        {% if c.recommendation == 'Highly Recommended' %}
+          <span class="rec-badge rb-hr">⭐ HR</span>
+        {% elif c.recommendation == 'Recommended' %}
+          <span class="rec-badge rb-r">✓ Rec</span>
+        {% elif c.recommendation == 'Maybe' %}
+          <span class="rec-badge rb-m">~ Maybe</span>
+        {% else %}
+          <span class="rec-badge rb-nr">✕ No</span>
+        {% endif %}
       </div>
     </div>
 
-    <!-- Scores -->
-    {% for label, val in [('Skill Match', c1.skill_score), ('Semantic', c1.semantic_score), ('ATS Score', c1.ats_score), ('Experience', c1.experience_score), ('Education', c1.education_score)] %}
+    <!-- Score Bars -->
+    {% for label, val, color in [
+      ('Skills', c.skill_score, 'var(--p1)'),
+      ('Semantic', c.semantic_score, 'var(--purple)'),
+      ('ATS', c.ats_score, 'var(--p6)'),
+      ('Experience', c.experience_score, 'var(--p3)'),
+      ('Education', c.education_score, 'var(--p4)')
+    ] %}
     <div class="bar-row">
-      <div class="bar-label"><span>{{ label }}</span><span>{{ val }}%</span></div>
-      <div class="bar-track"><div class="bar-fill" style="width:{{ val }}%; background:var(--accent)"></div></div>
+      <div class="bar-label"><span>{{ label }}</span><span style="color:{{ color }}; font-weight:700">{{ val }}%</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:{{ val }}%; background:{{ color }}"></div></div>
     </div>
     {% endfor %}
 
     <!-- Skills -->
-    <div style="margin-top:14px">
-      <div class="divider-label" style="margin-bottom:6px">Matched Skills</div>
-      <div style="display:flex; flex-wrap:wrap; gap:4px">
-        {% for s in c1.matched_skills %}<span class="tag tag-green">✓ {{ s }}</span>{% endfor %}
-        {% if not c1.matched_skills %}<span style="font-size:11px; color:var(--text3)">None</span>{% endif %}
+    <div style="margin-top:12px">
+      <div class="divider-label" style="margin-bottom:6px">✅ Matched</div>
+      <div style="display:flex; flex-wrap:wrap; gap:3px">
+        {% for s in c.matched_skills[:5] %}
+        <span class="skill-tag skill-matched">{{ s }}</span>
+        {% endfor %}
+        {% if c.matched_skills|length > 5 %}
+        <span class="skill-tag" style="background:var(--surface2); color:var(--text3)">+{{ c.matched_skills|length - 5 }}</span>
+        {% endif %}
+        {% if not c.matched_skills %}<span style="font-size:11px; color:var(--text3)">None</span>{% endif %}
       </div>
     </div>
 
-    <div style="margin-top:10px">
-      <div class="divider-label" style="margin-bottom:6px">Missing Skills</div>
-      <div style="display:flex; flex-wrap:wrap; gap:4px">
-        {% for s in c1.missing_skills[:5] %}<span class="tag tag-red">✕ {{ s }}</span>{% endfor %}
+    <div style="margin-top:8px">
+      <div class="divider-label" style="margin-bottom:6px">❌ Missing</div>
+      <div style="display:flex; flex-wrap:wrap; gap:3px">
+        {% for s in c.missing_skills[:4] %}
+        <span class="skill-tag skill-missing">{{ s }}</span>
+        {% endfor %}
+        {% if c.missing_skills|length > 4 %}
+        <span class="skill-tag" style="background:var(--surface2); color:var(--text3)">+{{ c.missing_skills|length - 4 }}</span>
+        {% endif %}
+        {% if not c.missing_skills %}<span style="font-size:11px; color:var(--text3)">None</span>{% endif %}
       </div>
     </div>
 
     <!-- AI Feedback -->
-    <div class="ai-box" style="margin-top:12px">
-      <div><strong>💪</strong> {{ c1.strengths }}</div>
-      <div style="margin-top:6px"><strong>⚠️</strong> {{ c1.weaknesses }}</div>
+    <div class="ai-box" style="margin-top:12px; font-size:11px">
+      <div><strong>💪</strong> {{ c.strengths[:100] }}{% if c.strengths|length > 100 %}...{% endif %}</div>
+      <div style="margin-top:5px"><strong>⚠️</strong> {{ c.weaknesses[:80] }}{% if c.weaknesses|length > 80 %}...{% endif %}</div>
     </div>
-  </div>
 
-  <!-- VS Divider -->
-  <div style="background:var(--surface2); border-top:1px solid var(--border); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:center">
-    <div style="font-size:18px; font-weight:900; color:var(--text3); writing-mode:vertical-rl; letter-spacing:4px">VS</div>
-  </div>
-
-  <!-- Candidate 2 -->
-  <div class="card" style="border-radius:0 16px 16px 0; border-left:none">
-    <div style="text-align:center; padding-bottom:16px; border-bottom:1px solid var(--border); margin-bottom:16px">
-      <div style="width:60px; height:60px; background:linear-gradient(135deg,var(--green),#059669); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:white; margin:0 auto 10px">{{ c2.name[0] }}</div>
-      <div style="font-size:17px; font-weight:700; color:var(--text)">{{ c2.name }}</div>
-      <div style="font-size:11px; color:var(--text3); margin-top:3px">{{ c2.experience_years }}yr exp · {{ c2.education_level }}</div>
-      <div style="font-size:28px; font-weight:900; color:var(--accent2); margin-top:8px">{{ c2.total_score }}%</div>
-      <div style="margin-top:6px">
-        {% if c2.recommendation == 'Highly Recommended' %}<span class="rec-badge rb-hr">⭐ {{ c2.recommendation }}</span>
-        {% elif c2.recommendation == 'Recommended' %}<span class="rec-badge rb-r">✓ {{ c2.recommendation }}</span>
-        {% elif c2.recommendation == 'Maybe' %}<span class="rec-badge rb-m">~ {{ c2.recommendation }}</span>
-        {% else %}<span class="rec-badge rb-nr">✕ {{ c2.recommendation }}</span>{% endif %}
+    <!-- Training -->
+    {% if c.training_suggestions %}
+    <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border)">
+      <div class="divider-label" style="margin-bottom:6px">📚 Training</div>
+      {% for t in c.training_suggestions[:2] %}
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px">
+        <span style="font-size:10px; color:var(--text2)">{{ t.skill }}</span>
+        <a href="{{ t.url }}" target="_blank" class="btn btn-ghost btn-sm" style="font-size:10px; padding:3px 8px">{{ t.platform }}</a>
       </div>
+      {% endfor %}
     </div>
+    {% endif %}
 
-    {% for label, val in [('Skill Match', c2.skill_score), ('Semantic', c2.semantic_score), ('ATS Score', c2.ats_score), ('Experience', c2.experience_score), ('Education', c2.education_score)] %}
-    <div class="bar-row">
-      <div class="bar-label"><span>{{ label }}</span><span>{{ val }}%</span></div>
-      <div class="bar-track"><div class="bar-fill" style="width:{{ val }}%; background:var(--green)"></div></div>
-    </div>
-    {% endfor %}
-
-    <div style="margin-top:14px">
-      <div class="divider-label" style="margin-bottom:6px">Matched Skills</div>
-      <div style="display:flex; flex-wrap:wrap; gap:4px">
-        {% for s in c2.matched_skills %}<span class="tag tag-green">✓ {{ s }}</span>{% endfor %}
-        {% if not c2.matched_skills %}<span style="font-size:11px; color:var(--text3)">None</span>{% endif %}
-      </div>
-    </div>
-
-    <div style="margin-top:10px">
-      <div class="divider-label" style="margin-bottom:6px">Missing Skills</div>
-      <div style="display:flex; flex-wrap:wrap; gap:4px">
-        {% for s in c2.missing_skills[:5] %}<span class="tag tag-red">✕ {{ s }}</span>{% endfor %}
-      </div>
-    </div>
-
-    <div class="ai-box" style="margin-top:12px">
-      <div><strong>💪</strong> {{ c2.strengths }}</div>
-      <div style="margin-top:6px"><strong>⚠️</strong> {{ c2.weaknesses }}</div>
-    </div>
   </div>
+  {% endfor %}
 </div>
 
-<!-- Head to Head Stats -->
-<div class="card" style="margin-bottom:24px">
-  <div class="card-title">📊 Head to Head Statistics</div>
+<!-- Head to Head Table -->
+<div class="card" style="margin-bottom:22px">
+  <div class="card-title">
+    <span class="aline" style="background:linear-gradient(var(--p1),var(--p2))"></span>
+    📊 Head to Head Statistics
+  </div>
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          <th>Category</th>
-          <th style="color:var(--accent2)">{{ c1.name }}</th>
-          <th style="color:var(--text3)">vs</th>
-          <th style="color:var(--green)">{{ c2.name }}</th>
-          <th>Winner</th>
+          <th>Metric</th>
+          {% for c in selected | sort(attribute='total_score', reverse=True) %}
+          <th style="color:{% if loop.index == 1 %}var(--p4){% elif loop.index == 2 %}#94a3b8{% else %}var(--text2){% endif %}">
+            {{ c.name.split()[0] }}
+          </th>
+          {% endfor %}
+          <th>Best</th>
         </tr>
       </thead>
       <tbody>
-        {% for cat, v1, v2 in [
-          ('Total Score', c1.total_score, c2.total_score),
-          ('Skill Match', c1.skill_score, c2.skill_score),
-          ('Semantic Similarity', c1.semantic_score, c2.semantic_score),
-          ('ATS Score', c1.ats_score, c2.ats_score),
-          ('Experience Score', c1.experience_score, c2.experience_score),
-          ('Education Score', c1.education_score, c2.education_score),
-          ('Experience Years', c1.experience_years, c2.experience_years)
+        {% set sorted_candidates = selected | sort(attribute='total_score', reverse=True) %}
+        {% for metric, attr in [
+          ('Total Score', 'total_score'),
+          ('Skill Match', 'skill_score'),
+          ('Semantic', 'semantic_score'),
+          ('ATS Score', 'ats_score'),
+          ('Experience Score', 'experience_score'),
+          ('Education Score', 'education_score'),
+          ('Experience (Years)', 'experience_years')
         ] %}
+        {% set values = sorted_candidates | map(attribute=attr) | list %}
+        {% set max_val = values | max %}
         <tr>
-          <td style="font-weight:600; color:var(--text)">{{ cat }}</td>
-          <td style="font-weight:700; color:{% if v1 > v2 %}var(--green){% elif v1 < v2 %}var(--red){% else %}var(--text2){% endif %}">
-            {{ v1 }}{% if cat != 'Experience Years' %}%{% endif %}
+          <td style="font-weight:600; color:var(--text)">{{ metric }}</td>
+          {% for c in sorted_candidates %}
+          {% set val = c[attr] %}
+          <td style="font-weight:{% if val == max_val %}700{% else %}400{% endif %}; color:{% if val == max_val %}var(--p3){% else %}var(--text2){% endif %}">
+            {{ val }}{% if attr != 'experience_years' %}%{% endif %}
           </td>
-          <td style="color:var(--text3); text-align:center">—</td>
-          <td style="font-weight:700; color:{% if v2 > v1 %}var(--green){% elif v2 < v1 %}var(--red){% else %}var(--text2){% endif %}">
-            {{ v2 }}{% if cat != 'Experience Years' %}%{% endif %}
-          </td>
+          {% endfor %}
           <td>
-            {% if v1 > v2 %}<span class="tag tag-green">{{ c1.name.split()[0] }} ✓</span>
-            {% elif v2 > v1 %}<span class="tag tag-green">{{ c2.name.split()[0] }} ✓</span>
-            {% else %}<span class="tag tag-blue">Tie</span>{% endif %}
+            {% for c in sorted_candidates %}
+            {% if c[attr] == max_val %}
+            <span class="tag tag-green">{{ c.name.split()[0] }}</span>
+            {% endif %}
+            {% endfor %}
           </td>
         </tr>
         {% endfor %}
@@ -203,51 +203,34 @@
   </div>
 </div>
 
-<!-- Training Suggestions -->
-<div class="grid-2">
-  <div class="card">
-    <div class="card-title">📚 Training for {{ c1.name }}</div>
-    {% if c1.training_suggestions %}
-    {% for t in c1.training_suggestions %}
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border)">
-      <div>
-        <div style="font-size:13px; font-weight:600; color:var(--text)">{{ t.skill }}</div>
-        <div style="font-size:11px; color:var(--text3); margin-top:2px">{{ t.course }}</div>
-      </div>
-      <a href="{{ t.url }}" target="_blank" class="btn btn-ghost btn-sm">{{ t.platform }} →</a>
-    </div>
-    {% endfor %}
-    {% else %}
-    <div class="empty"><div class="empty-sub">No suggestions needed!</div></div>
-    {% endif %}
-  </div>
-
-  <div class="card">
-    <div class="card-title">📚 Training for {{ c2.name }}</div>
-    {% if c2.training_suggestions %}
-    {% for t in c2.training_suggestions %}
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border)">
-      <div>
-        <div style="font-size:13px; font-weight:600; color:var(--text)">{{ t.skill }}</div>
-        <div style="font-size:11px; color:var(--text3); margin-top:2px">{{ t.course }}</div>
-      </div>
-      <a href="{{ t.url }}" target="_blank" class="btn btn-ghost btn-sm">{{ t.platform }} →</a>
-    </div>
-    {% endfor %}
-    {% else %}
-    <div class="empty"><div class="empty-sub">No suggestions needed!</div></div>
-    {% endif %}
+{% elif selected and selected|length < 2 %}
+<div class="card">
+  <div class="empty">
+    <div class="empty-icon">⚖️</div>
+    <div class="empty-title">Select at least 2 candidates</div>
+    <div class="empty-sub">Choose candidates from the dropdowns above to compare</div>
   </div>
 </div>
 
 {% else %}
 <div class="card">
   <div class="empty">
-    <div class="empty-icon">🔀</div>
-    <div class="empty-title">Select two candidates to compare</div>
-    <div class="empty-sub">Choose candidates from the dropdowns above</div>
+    <div class="empty-icon">⚖️</div>
+    <div class="empty-title">No candidates selected</div>
+    <div class="empty-sub">Choose 2 to 10 candidates from the dropdowns above to compare them side by side</div>
   </div>
 </div>
 {% endif %}
+
+<script>
+function updateSelectors() {
+  // Auto-show/hide selectors based on previous selection
+  const selects = document.querySelectorAll('select[name^="id"]');
+  let lastFilled = 1;
+  selects.forEach((sel, idx) => {
+    if (sel.value) lastFilled = idx + 2;
+  });
+}
+</script>
 
 {% endblock %}

@@ -585,13 +585,26 @@ async def candidates_page(request: Request, status: str = "", search: str = ""):
     })
 
 @app.get("/compare", response_class=HTMLResponse)
-async def compare_page(request: Request, id1: str = "", id2: str = ""):
-    c1 = next((c for c in candidates_store if c["id"] == id1), None)
-    c2 = next((c for c in candidates_store if c["id"] == id2), None)
+async def compare_page(request: Request, request_obj: Request = None):
+    # Get all selected candidate IDs from query params
+    params = dict(request.query_params)
+    selected_ids = []
+    for i in range(1, 11):
+        cid = params.get(f"id{i}", "")
+        if cid:
+            selected_ids.append(cid)
+
+    selected_candidates = []
+    for cid in selected_ids:
+        c = next((c for c in candidates_store if c["id"] == cid), None)
+        if c:
+            selected_candidates.append(c)
+
     return templates.TemplateResponse(request, "compare.html", {
-        "active": "candidates",
+        "active": "compare",
         "candidates": candidates_store,
-        "c1": c1, "c2": c2
+        "selected": selected_candidates,
+        "selected_ids": selected_ids
     })
 
 @app.post("/update-status", response_class=HTMLResponse)
