@@ -426,16 +426,20 @@ async def landing(request: Request):
     return templates.TemplateResponse(request, "landing.html", {})
 
 # RENAMED — dashboard now at /dashboard
-@app.get("/", response_class=HTMLResponse)
+@app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    # Check session
-    session_token = request.cookies.get("session_token")
-    if not session_token:
-        return RedirectResponse(url="/login")
-    try:
-        user = firebase_auth.verify_id_token(session_token)
-    except:
-        return RedirectResponse(url="/login")
+    total = len(candidates_store)
+    selected = len([c for c in candidates_store if c["status"] == "Selected"])
+    recommended = len([c for c in candidates_store if c["recommendation"] == "Highly Recommended"])
+    avg_score = round(sum(c["total_score"] for c in candidates_store) / total, 1) if total else 0
+    recent = sorted(candidates_store, key=lambda x: x["created_at"], reverse=True)[:5]
+    return templates.TemplateResponse(request, "index.html", {
+        "active": "dashboard",
+        "total": total, "selected": selected,
+        "recommended": recommended, "avg_score": avg_score,
+        "recent": recent, "jobs": jobs_store,
+        "candidates": candidates_store
+    })
 
     total = len(candidates_store)
     selected = len([c for c in candidates_store if c["status"] == "Selected"])
