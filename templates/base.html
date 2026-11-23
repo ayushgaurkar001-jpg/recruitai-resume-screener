@@ -755,11 +755,12 @@
     </div>
 
     <div class="sidebar-footer">
-      <div class="user-av">HR</div>
-      <div>
-        <div class="user-name">HR Admin</div>
+      <div class="user-av">{{ (user_name or 'HR')[0] | upper }}</div>
+      <div style="flex:1">
+        <div class="user-name">{{ user_name or 'HR Admin' }}</div>
         <div class="user-role">Administrator</div>
       </div>
+      <a href="/logout" style="color:var(--text3); font-size:18px; text-decoration:none" title="Logout">⏻</a>
     </div>
   </aside>
 

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RecruitAI — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050510;
+      --surface: #0C0C1E;
+      --surface2: #12122A;
+      --border: #1E1E3F;
+      --p1: #7B2FFF;
+      --p2: #FF2F7B;
+      --p3: #2FFFB4;
+      --p6: #2F9FFF;
+      --text: #F0EEFF;
+      --text2: #9896BE;
+      --text3: #5B5880;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px; left: -100px;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(123,47,255,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -100px; right: -100px;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,47,123,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .grid-bg {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(123,47,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(123,47,255,0.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    .login-wrap {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 420px;
+      padding: 20px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo-icon {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, var(--p1), var(--p2));
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 800; color: white;
+      font-family: 'Syne', sans-serif;
+      box-shadow: 0 0 25px rgba(123,47,255,0.4);
+      margin: 0 auto 14px;
+    }
+
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px; font-weight: 800;
+    }
+
+    .logo-text span {
+      background: linear-gradient(135deg, var(--p1), var(--p2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-sub { font-size: 13px; color: var(--text3); margin-top: 5px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+    }
+
+    .tabs {
+      display: flex;
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 24px;
+      gap: 4px;
+    }
+
+    .tab {
+      flex: 1; text-align: center;
+      padding: 8px;
+      border-radius: 7px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; color: var(--text3);
+      transition: all 0.2s;
+      border: none; background: none;
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, var(--p1), var(--p2));
+      color: white;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .form-group { margin-bottom: 16px; }
+
+    .form-label {
+      font-size: 11px; font-weight: 600;
+      color: var(--text2); margin-bottom: 7px;
+      display: block; text-transform: uppercase; letter-spacing: 0.4px;
+    }
+
+    input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--p1);
+      box-shadow: 0 0 0 3px rgba(123,47,255,0.12);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 9px;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; border: none;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+      margin-bottom: 10px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--p1), var(--p2));
+      color: white;
+      box-shadow: 0 4px 14px rgba(123,47,255,0.3);
+    }
+
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(123,47,255,0.5); }
+
+    .btn-google {
+      background: white;
+      color: #333;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+
+    .btn-phone {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 16px 0;
+      font-size: 11px; color: var(--text3);
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .error-box {
+      background: rgba(255,47,123,0.08);
+      border: 1px solid rgba(255,47,123,0.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--p2);
+      margin-bottom: 14px;
+      display: none;
+    }
+
+    .success-box {
+      background: rgba(47,255,180,0.08);
+      border: 1px solid rgba(47,255,180,0.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--p3);
+      margin-bottom: 14px;
+      display: none;
+    }
+
+    .loading-btn {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    #recaptcha-container { margin-bottom: 14px; }
+
+    .phone-step2 { display: none; }
+
+    .footer-text {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<div class="login-wrap">
+
+  <div class="logo">
+    <div class="logo-icon">R</div>
+    <div class="logo-text">Recruit<span>AI</span></div>
+    <div class="logo-sub">AI-Powered Recruitment Platform</div>
+  </div>
+
+  <div class="card">
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('email')">📧 Email</button>
+      <button class="tab" onclick="switchTab('phone')">📱 Phone</button>
+      <button class="tab" onclick="switchTab('google')">🔵 Google</button>
+    </div>
+
+    <!-- Error/Success -->
+    <div class="error-box" id="errorBox"></div>
+    <div class="success-box" id="successBox"></div>
+
+    <!-- EMAIL TAB -->
+    <div class="tab-content active" id="tab-email">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" id="emailInput" placeholder="admin@recruitai.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="passwordInput" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" onclick="loginWithEmail()">🔐 Sign In</button>
+      <button class="btn btn-phone" onclick="showRegister()" style="font-size:12px">Don't have an account? Register</button>
+
+      <!-- Register Form (hidden by default) -->
+      <div id="registerForm" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid var(--border)">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" id="regName" placeholder="John Doe">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="regEmail" placeholder="john@company.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="regPassword" placeholder="Min 6 characters">
+        </div>
+        <button class="btn btn-primary" onclick="registerWithEmail()">✅ Create Account</button>
+        <button class="btn btn-phone" onclick="hideRegister()" style="font-size:12px">Back to Login</button>
+      </div>
+    </div>
+
+    <!-- PHONE TAB -->
+    <div class="tab-content" id="tab-phone">
+      <div class="phone-step1">
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="tel" id="phoneInput" placeholder="+91 9999999999">
+        </div>
+        <div id="recaptcha-container"></div>
+        <button class="btn btn-primary" onclick="sendOTP()">📱 Send OTP</button>
+      </div>
+
+      <div class="phone-step2" id="phoneStep2">
+        <div class="form-group">
+          <label class="form-label">Enter OTP</label>
+          <input type="text" id="otpInput" placeholder="Enter 6-digit OTP" maxlength="6">
+        </div>
+        <button class="btn btn-primary" onclick="verifyOTP()">✅ Verify OTP</button>
+        <button class="btn btn-phone" onclick="backToPhone()" style="font-size:12px">← Back</button>
+      </div>
+    </div>
+
+    <!-- GOOGLE TAB -->
+    <div class="tab-content" id="tab-google">
+      <div style="text-align:center; padding:20px 0">
+        <div style="font-size:40px; margin-bottom:14px">🔵</div>
+        <div style="font-size:14px; color:var(--text2); margin-bottom:20px">
+          Sign in with your Google account instantly
+        </div>
+        <button class="btn btn-google" onclick="loginWithGoogle()">
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.1 8 3l5.7-5.7C34.5 6.5 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-9 20-20 0-1.3-.1-2.7-.4-4z"/>
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.1 18.9 12 24 12c3.1 0 5.9 1.1 8 3l5.7-5.7C34.5 6.5 29.5 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+            <path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-4.9l-6.2-5.2C29.3 35.4 26.8 36 24 36c-5.2 0-9.6-3-11.3-7.3L6 33.6C9.4 39.6 16.2 44 24 44z"/>
+            <path fill="#1976D2" d="M43.6 20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.8l6.2 5.2C40.9 35.5 44 30.1 44 24c0-1.3-.1-2.7-.4-4z"/>
+          </svg>
+          Continue with Google
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-text">
+    🔒 Secured by Firebase Authentication · RecruitAI v2.0
+  </div>
+
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signInWithPopup,
+    GoogleAuthProvider,
+    RecaptchaVerifier,
+    signInWithPhoneNumber,
+    onAuthStateChanged
+  } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+
+  // =============================================
+  // REPLACE WITH YOUR FIREBASE CONFIG
+  // =============================================
+  const firebaseConfig = {
+  apiKey: "AIzaSyAxS8K_m2j5T8otjFSURTz4Uwx-o3eGb-4",
+  authDomain: "recruitai-81d6f.firebaseapp.com",
+  projectId: "recruitai-81d6f",
+  storageBucket: "recruitai-81d6f.firebasestorage.app",
+  messagingSenderId: "746376271012",
+  appId: "1:746376271012:web:86c401b664528436568231"
+};
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const googleProvider = new GoogleAuthProvider();
+
+  // Check if already logged in
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      window.location.href = '/';
+    }
+  });
+
+  // Show error
+  function showError(msg) {
+    const box = document.getElementById('errorBox');
+    box.textContent = '❌ ' + msg;
+    box.style.display = 'block';
+    document.getElementById('successBox').style.display = 'none';
+  }
+
+  // Show success
+  function showSuccess(msg) {
+    const box = document.getElementById('successBox');
+    box.textContent = '✅ ' + msg;
+    box.style.display = 'block';
+    document.getElementById('errorBox').style.display = 'none';
+  }
+
+  // After login — save token and redirect
+  async function handleLogin(user) {
+    try {
+      const token = await user.getIdToken();
+      // Send token to backend
+      const response = await fetch('/auth/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({token: token, email: user.email, name: user.displayName || user.email})
+      });
+      if (response.ok) {
+        showSuccess('Login successful! Redirecting...');
+        setTimeout(() => window.location.href = '/', 1000);
+      } else {
+        showError('Authentication failed. Please try again.');
+      }
+    } catch(e) {
+      showError(e.message);
+    }
+  }
+
+  // Email Login
+  window.loginWithEmail = async function() {
+    const email = document.getElementById('emailInput').value;
+    const password = document.getElementById('passwordInput').value;
+    if (!email || !password) { showError('Please enter email and password'); return; }
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      await handleLogin(result.user);
+    } catch(e) {
+      showError(e.message.replace('Firebase: ', ''));
+    }
+  }
+
+  // Email Register
+  window.registerWithEmail = async function() {
+    const name = document.getElementById('regName').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+    if (!name || !email || !password) { showError('Please fill all fields'); return; }
+    if (password.length < 6) { showError('Password must be at least 6 characters'); return; }
+    try {
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      await handleLogin(result.user);
+    } catch(e) {
+      showError(e.message.replace('Firebase: ', ''));
+    }
+  }
+
+  // Google Login
+  window.loginWithGoogle = async function() {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      await handleLogin(result.user);
+    } catch(e) {
+      showError(e.message.replace('Firebase: ', ''));
+    }
+  }
+
+  // Phone Login
+  let confirmationResult;
+
+  window.sendOTP = async function() {
+    const phone = document.getElementById('phoneInput').value;
+    if (!phone) { showError('Please enter phone number'); return; }
+    try {
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'normal',
+          callback: () => {}
+        });
+      }
+      confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
+      document.querySelector('.phone-step1').style.display = 'none';
+      document.getElementById('phoneStep2').style.display = 'block';
+      showSuccess('OTP sent successfully!');
+    } catch(e) {
+      showError(e.message.replace('Firebase: ', ''));
+    }
+  }
+
+  window.verifyOTP = async function() {
+    const otp = document.getElementById('otpInput').value;
+    if (!otp) { showError('Please enter OTP'); return; }
+    try {
+      const result = await confirmationResult.confirm(otp);
+      await handleLogin(result.user);
+    } catch(e) {
+      showError('Invalid OTP. Please try again.');
+    }
+  }
+
+  window.backToPhone = function() {
+    document.querySelector('.phone-step1').style.display = 'block';
+    document.getElementById('phoneStep2').style.display = 'none';
+  }
+</script>
+
+<script>
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('errorBox').style.display = 'none';
+    document.getElementById('successBox').style.display = 'none';
+  }
+
+  function showRegister() {
+    document.getElementById('registerForm').style.display = 'block';
+  }
+
+  function hideRegister() {
+    document.getElementById('registerForm').style.display = 'none';
+  }
+</script>
+
+</body>
+</html>
