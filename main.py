@@ -19,6 +19,15 @@ from docx import Document
 import firebase_admin
 from firebase_admin import credentials, firestore
 
+async def verify_session(session_token: str = Cookie(default=None)):
+    if not session_token:
+        return None
+    try:
+        decoded = firebase_auth.verify_id_token(session_token)
+        return decoded
+    except:
+        return None
+
 # Load environment variables
 load_dotenv()
 
@@ -417,8 +426,17 @@ async def landing(request: Request):
     return templates.TemplateResponse(request, "landing.html", {})
 
 # RENAMED — dashboard now at /dashboard
-@app.get("/dashboard", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
+    # Check session
+    session_token = request.cookies.get("session_token")
+    if not session_token:
+        return RedirectResponse(url="/login")
+    try:
+        user = firebase_auth.verify_id_token(session_token)
+    except:
+        return RedirectResponse(url="/login")
+
     total = len(candidates_store)
     selected = len([c for c in candidates_store if c["status"] == "Selected"])
     recommended = len([c for c in candidates_store if c["recommendation"] == "Highly Recommended"])
@@ -429,7 +447,9 @@ async def dashboard(request: Request):
         "total": total, "selected": selected,
         "recommended": recommended, "avg_score": avg_score,
         "recent": recent, "jobs": jobs_store,
-        "candidates": candidates_store
+        "candidates": candidates_store,
+        "user_email": user.get("email", "HR Admin"),
+        "user_name": user.get("name", "HR Admin")
     })
 
 # =============================================
@@ -717,3 +737,40 @@ async def clear(request: Request):
         "results": [], "job_keywords": [],
         "job_description": ""
     })
+# =============================================
+# ROUTES — AUTHENTICATION
+# =============================================
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse(request, "login.html", {})
+
+@app.post("/auth/login")
+async def auth_login(request: Request):
+    try:
+        data = await request.json()
+        token = data.get("token")
+        email = data.get("email")
+        name = data.get("name")
+
+        # Verify Firebase token
+        decoded = firebase_auth.verify_id_token(token)
+        uid = decoded["uid"]
+
+        response = JSONResponse({"status": "ok", "uid": uid})
+        response.set_cookie(
+            key="session_token",
+            value=token,
+            httponly=True,
+            max_age=3600,
+            samesite="lax"
+        )
+        return response
+    except Exception as e:
+        print(f"Auth error: {e}")
+        return JSONResponse({"status": "error"}, status_code=401)
+
+@app.get("/logout")
+async def logout():
+    response = RedirectResponse(url="/login")
+    response.delete_cookie("session_token")
+    return response
